@@ -57,8 +57,8 @@ mod test {
 
         // integrate func from 0 to 10.
         assert_relative_eq!(
-            xs.into_iter()
-                .map(func)
+            xs.map(func)
+                .into_iter()
                 .zip(ws.into_iter())
                 .map(|(x, w)| w * x)
                 .sum::<f64>(),

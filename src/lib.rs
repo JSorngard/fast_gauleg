@@ -42,7 +42,7 @@ mod test {
 
     #[test]
     fn check_gauleg() {
-        const NUMBER_OF_POINTS: usize = 10;
+        const NUMBER_OF_POINTS: usize = 100;
         const X1: f64 = 0.0;
         const X2: f64 = 10.0;
 
@@ -63,7 +63,7 @@ mod test {
                 .map(|(x, w)| w * x)
                 .sum::<f64>(),
             1.0 - (1.0 + X2) * f64::exp(-X2),
-            epsilon = 1e-10,
+            epsilon = 1e-14,
         );
     }
 }

@@ -57,12 +57,12 @@ mod test {
 
         // integrate func from 0 to 10.
         assert_relative_eq!(
+            1.0 - (1.0 + X2) * f64::exp(-X2),
             xs.map(func)
                 .into_iter()
                 .zip(ws.into_iter())
                 .map(|(x, w)| w * x)
-                .sum::<f64>(),
-            1.0 - (1.0 + X2) * f64::exp(-X2),
+                .sum(),
             epsilon = 1e-14,
         );
     }

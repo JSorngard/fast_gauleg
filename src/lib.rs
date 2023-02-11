@@ -1,5 +1,7 @@
 use std::f64::consts::PI;
 
+/// Computes the weights and abscissas used when integrating a function
+/// in the domain [x1, x2] using Gauss-Legendre quadrature.
 /// # Panic
 /// Panics if the length of the slices are different
 pub fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
@@ -41,6 +43,8 @@ pub fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
     }
 }
 
+/// Integrates the given function from `start` to `end`
+/// using Gauss-Legendre quadrature with `number_of_points` points.
 pub fn gauss_legendre_quadrature(
     start: f64,
     end: f64,

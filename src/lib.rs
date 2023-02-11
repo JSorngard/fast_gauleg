@@ -45,6 +45,16 @@ pub fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
 
 /// Integrates the given function from `start` to `end`
 /// using Gauss-Legendre quadrature with `number_of_points` points.
+/// # Example
+/// ```
+/// # use numerical_recipes::gauss_legendre_quadrature;
+/// fn f(x: f64) -> f64 {
+///     x * f64::exp(-x)
+/// }
+/// let end = 10.0;
+/// assert!(
+///     (gauss_legendre_quadrature(0.0, end, f, 100) - (1.0 - (1.0 + end) * f64::exp(-end))).abs() < 1e-14);
+/// ```
 pub fn gauss_legendre_quadrature(
     start: f64,
     end: f64,

@@ -3,7 +3,7 @@ use std::f64::consts::PI;
 /// Computes the weights and abscissas used when integrating a function
 /// in the domain [x1, x2] using Gauss-Legendre quadrature.
 /// # Panic
-/// Panics if the length of the slices are different
+/// Panics if the lengths of the slices are different
 pub fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
     assert_eq!(x.len(), w.len());
 

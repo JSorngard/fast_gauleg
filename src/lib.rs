@@ -76,7 +76,7 @@ mod test {
             x * f64::exp(-x)
         }
 
-        // integrate func from 0 to 10.
+        // integrate func from X1 to X2.
         assert_relative_eq!(
             1.0 - (1.0 + X2) * f64::exp(-X2),
             gauss_legendre_quadrature(X1, X2, func, NUMBER_OF_POINTS),

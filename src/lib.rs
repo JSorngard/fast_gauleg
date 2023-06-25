@@ -14,6 +14,8 @@ pub struct QuadratureIntegrator {
 
 impl QuadratureIntegrator {
     #[must_use = "function returns a new instance and does not modify the input values"]
+    /// Creates a new integrator that integrates functions over the given domain.
+    /// For a given number of integration points it can integrate polynomials of degree 2`points` - 1 exactly.
     pub fn new(start: f64, end: f64, points: usize) -> Self {
         let mut xs_and_ws = vec![0.0; 2 * points];
         let (xs, ws) = xs_and_ws.split_at_mut(points);

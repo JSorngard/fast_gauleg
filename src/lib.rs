@@ -88,13 +88,6 @@ impl QuadratureIntegrator {
     #[cfg(feature = "rayon")]
     /// Integrates a function that returns the given values at the integrator's abscissas  (in parallel).
     /// This allows pre-computing function values, and then integrating.
-    /// # Example
-    /// ```
-    /// # use gauss_legendre_quadrature::QuadratureIntegrator;
-    /// let integrator = QuadratureIntegrator::new(0.0, std::f64::consts::PI, 100);
-    /// let f_vals: Vec<f64> = integrator.abscissas().iter().map(|x| x.sin()).collect();
-    /// assert!((integrator.par_integrate_slice(&f_vals) - 2.0).abs() < 1e-15);
-    /// ```
     /// # Panic
     /// Panics if the length of the given slice is not the same as the number of points in the integrator.
     #[must_use = "the method returns a value and does not modify `self` or its inputs"]

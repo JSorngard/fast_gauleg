@@ -94,11 +94,7 @@ impl QuadratureIntegrator {
     /// Changes the number of points used during integration. If the number is increased an
     /// allocation is done, if is is decreased the current allocation is reused (an nothing is freed).
     pub fn change_number_of_points(&mut self, points: usize) {
-        if points > self.points {
-            self.xs_and_ws = vec![0.0; 2 * points];
-        } else {
-            self.xs_and_ws.truncate(2 * points);
-        }
+        self.xs_and_ws.resize(2 * points, 0.0);
         let (xs, ws) = self.xs_and_ws.split_at_mut(points);
         gauleg(self.start, self.end, xs, ws);
         self.points = points;

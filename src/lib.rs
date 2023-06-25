@@ -30,7 +30,7 @@ impl QuadratureIntegrator {
     /// once for each point in the domain.
     /// # Example
     /// ```
-    /// # use numerical_recipes::QuadratureIntegrator;
+    /// # use gauss_legendre_quadrature::QuadratureIntegrator;
     /// let integrator = QuadratureIntegrator::new(0.0, std::f64::consts::PI, 100);
     /// assert!((integrator.integrate(|x| x.sin()) - 2.0).abs() < 1e-15);
     /// ```
@@ -46,10 +46,11 @@ impl QuadratureIntegrator {
     /// Integrates the given function over `self`'s domain in parallel.
     /// # Example
     /// ```
-    /// # use numerical_recipes::QuadratureIntegrator;
+    /// # use gauss_legendre_quadrature::QuadratureIntegrator;
     /// let integrator = QuadratureIntegrator::new(0.0, std::f64::consts::PI, 100);
     /// assert!((integrator.par_integrate(|x| x.sin()) - 2.0).abs() < 1e-15);
     /// ```
+    #[must_use = "the method returns a value and does not modify `self` or its inputs"]
     pub fn par_integrate<F>(&self, f: F) -> f64
     where
         F: Fn(f64) -> f64 + Sync,
@@ -126,7 +127,7 @@ pub fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
 /// using Gauss-Legendre quadrature with `points` points.
 /// # Example
 /// ```
-/// # use numerical_recipes::gauss_legendre_quadrature;
+/// # use gauss_legendre_quadrature::gauss_legendre_quadrature;
 /// fn f(x: f64) -> f64 {
 ///     x * (-x).exp()
 /// }

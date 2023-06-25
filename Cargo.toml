@@ -1,5 +1,5 @@
 [package]
-name = "numerical_recipes"
+name = "gauss_legendre_quadrature"
 version = "0.1.0"
 edition = "2021"
 

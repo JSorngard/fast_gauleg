@@ -1,15 +1,12 @@
 #[cfg(feature = "rayon")]
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
-/// An object that can integrate `FnMut(f64) -> f64` functions over its domain.
-/// If the `rayon` feature is enabled it can also integrate `Fn(f64) -> f64` functions over its domain in parallel.
-/// Useful if you need to integrate many functions over the same domain.
+/// An object that can integrate `FnMut(f64) -> f64` functions.
+/// If the `rayon` feature is enabled it can also integrate `Fn(f64) -> f64` functions in parallel.
 /// If instantiated with `n` points it can integrate polynomials of degree `2n - 1` exactly.
-/// It is less accurate the less polynomial-like the given funciton is, and the less it conforms to the degree-bound.
+/// It is less accurate the less polynomial-like the given function is, and the less it conforms to the degree-bound.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GLQIntegrator {
-    start: f64,
-    end: f64,
     // We use only one allocation for the abscissas and weights
     // to increase that chances that both end up in the cache during
     // the same fetch from memory when the number of points is small.
@@ -20,47 +17,46 @@ pub struct GLQIntegrator {
 impl GLQIntegrator {
     #[must_use = "function returns a new instance and does not modify the input values"]
     /// Creates a new integrator that integrates functions over the given domain.
-    pub fn new(start: f64, end: f64, points: usize) -> Self {
+    pub fn new(points: usize) -> Self {
         let mut xs_and_ws = vec![0.0; 2 * points];
         let (xs, ws) = xs_and_ws.split_at_mut(points);
-        gauleg(start, end, xs, ws);
-        Self {
-            start,
-            end,
-            xs_and_ws,
-            points,
-        }
+        gauleg(-1.0, 1.0, xs, ws);
+        Self { xs_and_ws, points }
     }
 
-    /// Integrates the given function over `self`'s domain. The given closure will be called
-    /// once for each point in the domain.
+    /// Integrates the given function over the given domain. The given closure will be called
+    /// once for each evaluation point.
     /// # Example
     /// Integrate degree 5 polynomials with only 3 evaluation points:
     /// ```
     /// # use gauss_legendre_quadrature::GLQIntegrator;
     /// # use approx::assert_relative_eq;
-    /// let integrator = GLQIntegrator::new(0.0, 1.0, 3);
+    /// let integrator = GLQIntegrator::new(3);
     /// assert_relative_eq!(
-    ///     integrator.integrate(|x| x.powf(5.0)),
+    ///     integrator.integrate(0.0, 1.0, |x| x.powf(5.0)),
     ///     1.0 / 6.0,
     ///     epsilon = 1e-15,
     /// );
     /// assert_relative_eq!(
-    ///     integrator.integrate(|x| x.powf(5.0) - 2.0 * x.powf(4.0) + 1.0),
-    ///     1.0 / 6.0 - 2.0 / 5.0 + 1.0,
+    ///     integrator.integrate(-1.0, 1.0, |x| x.powf(5.0) - 2.0 * x.powf(4.0) + 1.0),
+    ///     6.0 / 5.0,
     ///     epsilon = 1e-14, // Slightly less accurate
     /// );
     /// ```
-    pub fn integrate<F>(&self, mut f: F) -> f64
+    pub fn integrate<F>(&self, start: f64, end: f64, mut f: F) -> f64
     where
         F: FnMut(f64) -> f64,
     {
         let (xs, ws) = self.xs_and_ws.split_at(self.points);
-        xs.iter().zip(ws.iter()).map(|(x, w)| w * f(*x)).sum()
+        xs.iter()
+            .zip(ws.iter())
+            .map(|(x, w)| w * f((end - start) * 0.5 * x + (start + end) * 0.5))
+            .sum::<f64>()
+            * (end - start)
+            * 0.5
     }
 
-    /// Returns a slice of the integrators abscissas, the points at which the integrator
-    /// evaluates the functions it integrates.
+    /// Returns a slice of the integrators abscissas.
     pub fn abscissas(&self) -> &[f64] {
         &self.xs_and_ws[..self.points]
     }
@@ -71,71 +67,20 @@ impl GLQIntegrator {
         &self.xs_and_ws[self.points..]
     }
 
-    /// Integrates a function that returns the given values at the integrator's abscissas.
-    /// This allows pre-computing function values, and then integrating.
-    /// # Example
-    /// ```
-    /// # use gauss_legendre_quadrature::GLQIntegrator;
-    /// # use approx::assert_relative_eq;
-    /// let integrator = GLQIntegrator::new(0.0, std::f64::consts::PI, 65);
-    /// let f_vals: Vec<f64> = integrator.abscissas().iter().map(|x| x.sin()).collect();
-    /// assert_relative_eq!(integrator.integrate_slice(&f_vals), 2.0);
-    /// ```
-    /// # Panic
-    /// Panics if the length of the given slice is not the same as the number of points in the integrator.
-    #[must_use = "the method returns a value and does not modify `self` or its inputs"]
-    pub fn integrate_slice(&self, f_vals: &[f64]) -> f64 {
-        assert_eq!(f_vals.len(), self.points);
-        self.xs_and_ws
-            .iter()
-            .skip(self.points)
-            .enumerate()
-            .map(|(i, w)| w * f_vals[i])
-            .sum()
-    }
-
     #[cfg(feature = "rayon")]
-    /// Integrates a function that returns the given values at the integrator's abscissas  (in parallel).
-    /// This allows pre-computing function values, and then integrating.
-    /// # Panic
-    /// Panics if the length of the given slice is not the same as the number of points in the integrator.
+    /// Integrates the given function over the given domain in parallel.
     #[must_use = "the method returns a value and does not modify `self` or its inputs"]
-    pub fn par_integrate_slice(&self, f_vals: &[f64]) -> f64 {
-        assert_eq!(f_vals.len(), self.points);
-        self.xs_and_ws
-            .par_iter()
-            .skip(self.points)
-            .enumerate()
-            .map(|(i, w)| w * f_vals[i])
-            .sum()
-    }
-
-    #[cfg(feature = "rayon")]
-    /// Integrates the given function over `self`'s domain in parallel.
-    #[must_use = "the method returns a value and does not modify `self` or its inputs"]
-    pub fn par_integrate<F>(&self, f: F) -> f64
+    pub fn par_integrate<F>(&self, start: f64, end: f64, f: F) -> f64
     where
         F: Fn(f64) -> f64 + Sync,
     {
         let (xs, ws) = self.xs_and_ws.split_at(self.points);
         xs.par_iter()
             .zip(ws.par_iter())
-            .map(|(x, w)| w * f(*x))
-            .sum()
-    }
-
-    /// Returns the first point of the integration domain
-    #[must_use = "the method returns a value and does not modify `self` or its inputs"]
-    #[inline(always)]
-    pub const fn start(&self) -> f64 {
-        self.start
-    }
-
-    /// Returns the last point of the integration domain
-    #[must_use = "the method returns a value and does not modify `self` or its inputs"]
-    #[inline(always)]
-    pub const fn end(&self) -> f64 {
-        self.end
+            .map(|(x, w)| w * f((end - start) * 0.5 * x + (start + end) * 0.5))
+            .sum::<f64>()
+            * (end - start)
+            * 0.5
     }
 
     /// Returns the number of points in the integration domain
@@ -145,31 +90,12 @@ impl GLQIntegrator {
         self.points
     }
 
-    /// Change the domain of the integrator
-    pub fn change_domain(&mut self, start: f64, end: f64) {
-        let (xs, ws) = self.xs_and_ws.split_at_mut(self.points);
-        gauleg(start, end, xs, ws);
-        self.start = start;
-        self.end = end;
-    }
-
     /// Changes the number of points used during integration.
     /// If the number is not increased the old allocation is reused.
     pub fn change_number_of_points(&mut self, points: usize) {
         self.xs_and_ws.resize(2 * points, 0.0);
         let (xs, ws) = self.xs_and_ws.split_at_mut(points);
-        gauleg(self.start, self.end, xs, ws);
-        self.points = points;
-    }
-
-    /// Change the number of integration points and the integration domain. If the number of integration points
-    /// is not increased the old allocation is reused.
-    pub fn change_number_of_points_and_domain(&mut self, start: f64, end: f64, points: usize) {
-        self.xs_and_ws.resize(2 * points, 0.0);
-        let (xs, ws) = self.xs_and_ws.split_at_mut(points);
-        gauleg(start, end, xs, ws);
-        self.start = start;
-        self.end = end;
+        gauleg(-1.0, 1.0, xs, ws);
         self.points = points;
     }
 }
@@ -272,17 +198,24 @@ mod test {
         const X1: f64 = 0.0;
         const X2: f64 = 10.0;
 
-        let mut integrator = GLQIntegrator::new(X1, X2, NUMBER_OF_POINTS);
+        let integrator = GLQIntegrator::new(NUMBER_OF_POINTS);
         assert_relative_eq!(
-            integrator.integrate(|x| x * (-x).exp()),
+            integrator.integrate(X1, X2, |x| x * (-x).exp()),
             1.0 - (1.0 + X2) * (-X2).exp(),
             epsilon = 1e-14
         );
-        assert_relative_eq!(integrator.integrate(|x| x), X2 * X2 / 2.0, epsilon = 1e-12);
+        assert_relative_eq!(
+            integrator.integrate(X1, X2, |x| x),
+            X2 * X2 / 2.0,
+            epsilon = 1e-12
+        );
 
         const X3: f64 = 100.0;
-        integrator.change_domain(X1, X3);
-        assert_relative_eq!(integrator.integrate(|x| x.cos()), X3.sin(), epsilon = 1e-12);
+        assert_relative_eq!(
+            integrator.integrate(X1, X3, |x| x.cos()),
+            X3.sin(),
+            epsilon = 1e-12
+        );
     }
 
     #[cfg(feature = "rayon")]
@@ -291,9 +224,9 @@ mod test {
         const NUMBER_OF_POINTS: usize = 100;
         const X1: f64 = 0.0;
         const X2: f64 = 10.0;
-        let integrator = GLQIntegrator::new(X1, X2, NUMBER_OF_POINTS);
+        let integrator = GLQIntegrator::new(NUMBER_OF_POINTS);
         assert_relative_eq!(
-            integrator.par_integrate(|x| x.cos()),
+            integrator.par_integrate(X1, X2, |x| x.cos()),
             X2.sin(),
             epsilon = 1e-14
         );

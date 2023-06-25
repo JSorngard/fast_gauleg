@@ -63,6 +63,8 @@ impl QuadratureIntegrator {
     /// let f_vals: Vec<f64> = integrator.abscissas().iter().map(|x| x.sin()).collect();
     /// assert!((integrator.integrate_cached(&f_vals) - 2.0).abs() < 1e-15);
     /// ```
+    /// # Panic
+    /// Panics if the length of the given slice is not the same as the number of points in the integrator.
     pub fn integrate_cached(&self, f_vals: &[f64]) -> f64 {
         assert_eq!(f_vals.len(), self.points);
         self.xs_and_ws
@@ -83,6 +85,8 @@ impl QuadratureIntegrator {
     /// let f_vals: Vec<f64> = integrator.abscissas().iter().map(|x| x.sin()).collect();
     /// assert!((integrator.par_integrate_cached(&f_vals) - 2.0).abs() < 1e-15);
     /// ```
+    /// # Panic
+    /// Panics if the length of the given slice is not the same as the number of points in the integrator.
     pub fn par_integrate_cached(&self, f_vals: &[f64]) -> f64 {
         assert_eq!(f_vals.len(), self.points);
         self.xs_and_ws

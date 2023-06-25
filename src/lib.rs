@@ -1,3 +1,6 @@
+#[cfg(feature = "rayon")]
+use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
+
 /// An object that can integrate any `FnMut(f64) -> f64` function over its domain.
 /// Useful if you need to integrate many functions over the same domain.
 #[derive(Debug, Clone, PartialEq)]
@@ -30,6 +33,19 @@ impl QuadratureIntegrator {
     {
         let (xs, ws) = self.xs_and_ws.split_at(self.points);
         xs.iter().zip(ws.iter()).map(|(x, w)| w * f(*x)).sum()
+    }
+
+    #[cfg(feature = "rayon")]
+    /// Integrates the given function over `self`s domain in parallel.
+    pub fn par_integrate<F>(&self, f: F) -> f64
+    where
+        F: Fn(f64) -> f64 + Sync,
+    {
+        let (xs, ws) = self.xs_and_ws.split_at(self.points);
+        xs.par_iter()
+            .zip(ws.par_iter())
+            .map(|(x, w)| w * f(*x))
+            .sum()
     }
 
     /// Returns the first point of the integration domain
@@ -158,6 +174,20 @@ mod test {
             1.0 - (1.0 + X2) * (-X2).exp(),
             epsilon = 1e-14
         );
-        assert_relative_eq!(integrator.integrate(|x| x), X2 * X2 / 2.0, epsilon = 1e-12)
+        assert_relative_eq!(integrator.integrate(|x| x), X2 * X2 / 2.0, epsilon = 1e-12);
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn check_parallel_integrator() {
+        const NUMBER_OF_POINTS: usize = 100;
+        const X1: f64 = 0.0;
+        const X2: f64 = 10.0;
+        let integrator = QuadratureIntegrator::new(X1, X2, NUMBER_OF_POINTS);
+        assert_relative_eq!(
+            integrator.par_integrate(|x| x.cos()),
+            X2.sin(),
+            epsilon = 1e-14
+        );
     }
 }

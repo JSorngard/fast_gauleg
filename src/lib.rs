@@ -85,16 +85,36 @@ impl QuadratureIntegrator {
 
     /// Change the domain of the integrator
     pub fn change_domain(&mut self, start: f64, end: f64) {
+        self.zero_allocation();
         let (xs, ws) = self.xs_and_ws.split_at_mut(self.points);
         gauleg(start, end, xs, ws);
         self.start = start;
         self.end = end;
     }
 
+    // Set all values in the allocation to `0.0`.
+    fn zero_allocation(&mut self) {
+        for element in self.xs_and_ws.iter_mut() {
+            *element = 0.0;
+        }
+    }
+
+    /// Resize the allocation and zero it before/after depending on whether it
+    /// will be expanded/shrunk.
+    fn resize_and_zero_allocation(&mut self, points: usize) {
+        if points >= self.points {
+            self.zero_allocation();
+        }
+        self.xs_and_ws.resize(2 * points, 0.0);
+        if points < self.points {
+            self.zero_allocation();
+        }
+    }
+
     /// Changes the number of points used during integration.
     /// If the number is not increased the old allocation is reused.
     pub fn change_number_of_points(&mut self, points: usize) {
-        self.xs_and_ws.resize(2 * points, 0.0);
+        self.resize_and_zero_allocation(points);
         let (xs, ws) = self.xs_and_ws.split_at_mut(points);
         gauleg(self.start, self.end, xs, ws);
         self.points = points;
@@ -103,7 +123,7 @@ impl QuadratureIntegrator {
     /// Change the number of integration points and the integration domain. If the number of integration points
     /// is not increased the old allocation is reused.
     pub fn change_number_of_points_and_domain(&mut self, start: f64, end: f64, points: usize) {
-        self.xs_and_ws.resize(2 * points, 0.0);
+        self.resize_and_zero_allocation(points);
         let (xs, ws) = self.xs_and_ws.split_at_mut(points);
         gauleg(start, end, xs, ws);
         self.start = start;

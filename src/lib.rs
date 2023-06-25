@@ -210,15 +210,15 @@ pub fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
 /// using Gauss-Legendre quadrature with `points` points.
 /// # Example
 /// ```
-/// # use gauss_legendre_quadrature::gauss_legendre_quadrature;
+/// # use gauss_legendre_quadrature::quad;
 /// fn f(x: f64) -> f64 {
 ///     x * (-x).exp()
 /// }
 /// let end = 10.0;
 /// assert!(
-///     (gauss_legendre_quadrature(0.0, end, 100, f) - (1.0 - (1.0 + end) * (-end).exp())).abs() < 1e-14);
+///     (quad(0.0, end, 100, f) - (1.0 - (1.0 + end) * (-end).exp())).abs() < 1e-14);
 /// ```
-pub fn gauss_legendre_quadrature<F>(start: f64, end: f64, points: usize, mut f: F) -> f64
+pub fn quad<F>(start: f64, end: f64, points: usize, mut f: F) -> f64
 where
     F: FnMut(f64) -> f64,
 {
@@ -254,7 +254,7 @@ mod test {
         // integrate func from X1 to X2.
         assert_relative_eq!(
             1.0 - (1.0 + X2) * (-X2).exp(),
-            gauss_legendre_quadrature(X1, X2, NUMBER_OF_POINTS, func),
+            quad(X1, X2, NUMBER_OF_POINTS, func),
             epsilon = 1e-14,
         );
     }

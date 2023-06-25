@@ -124,9 +124,23 @@ mod test {
 
         // integrate func from X1 to X2.
         assert_relative_eq!(
-            1.0 - (1.0 + X2) * Float::exp(-X2),
+            1.0 - (1.0 + X2) * (-X2).exp(),
             gauss_legendre_quadrature(X1, X2, func, NUMBER_OF_POINTS),
             epsilon = 1e-14,
+        );
+    }
+
+    #[test]
+    fn check_integrator() {
+        const NUMBER_OF_POINTS: usize = 100;
+        const X1: Float = 0.0;
+        const X2: Float = 10.0;
+
+        let integrator = QuadratureIntegrator::new(X1, X2, NUMBER_OF_POINTS);
+        assert_relative_eq!(
+            integrator.integrate(|x| x * (-x).exp()),
+            1.0 - (1.0 + X2) * (-X2).exp(),
+            epsilon = 1e-14
         );
     }
 }

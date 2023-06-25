@@ -1,8 +1,4 @@
-#[cfg(feature = "rayon")]
-use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
-
 /// An object that can integrate `fn(f64) -> f64` functions.
-/// If the `rayon` feature is enabled it can also integrate in parallel.
 /// If instantiated with `n` points it can integrate polynomials of degree `2n - 1` exactly.
 /// It is less accurate the less polynomial-like the given function is, and the less it conforms to the degree-bound.
 #[derive(Debug, Clone, PartialEq)]
@@ -79,30 +75,6 @@ impl GLQIntegrator {
     /// numbers before they are summed.
     pub fn weights(&self) -> &[f64] {
         &self.xs_and_ws[self.points..]
-    }
-
-    #[cfg(feature = "rayon")]
-    /// Integrates the given function over the given domain in parallel.
-    /// # Example
-    /// ```
-    /// # use gauss_legendre_quadrature::GLQIntegrator;
-    /// # use approx::assert_relative_eq;
-    /// let integrator = GLQIntegrator::new(100);
-    /// assert_relative_eq!(
-    ///     integrator.par_integrate(0.0, 100.0, |x| (-x).exp() * x.sin()),
-    ///     0.5,
-    ///     epsilon = 1e-12,
-    /// );
-    /// ```
-    #[must_use = "the method returns a value and does not modify `self` or its inputs"]
-    pub fn par_integrate(&self, start: f64, end: f64, f: fn(f64) -> f64) -> f64 {
-        let (xs, ws) = self.xs_and_ws.split_at(self.points);
-        xs.par_iter()
-            .zip(ws.par_iter())
-            .map(|(x, w)| w * f((end - start) * 0.5 * x + (start + end) * 0.5))
-            .sum::<f64>()
-            * (end - start)
-            * 0.5
     }
 
     /// Returns the number of points in the integration domain
@@ -237,25 +209,6 @@ mod test {
             integrator.integrate(X1, X3, |x| x.cos()),
             X3.sin(),
             epsilon = 1e-12
-        );
-    }
-
-    #[cfg(feature = "rayon")]
-    #[test]
-    fn check_parallel_integrator() {
-        const NUMBER_OF_POINTS: usize = 100;
-        const X1: f64 = 0.0;
-        const X2: f64 = 10.0;
-        let integrator = GLQIntegrator::new(NUMBER_OF_POINTS);
-        assert_relative_eq!(
-            integrator.par_integrate(X1, X2, |x| x.cos()),
-            X2.sin(),
-            epsilon = 1e-14
-        );
-        assert_relative_eq!(
-            integrator.par_integrate(0.0, 100.0, |x| (-x).exp() * x.sin()),
-            0.5,
-            epsilon = 1e-12,
         );
     }
 }

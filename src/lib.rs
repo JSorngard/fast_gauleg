@@ -210,13 +210,17 @@ mod test {
         const X1: f64 = 0.0;
         const X2: f64 = 10.0;
 
-        let integrator = QuadratureIntegrator::new(X1, X2, NUMBER_OF_POINTS);
+        let mut integrator = QuadratureIntegrator::new(X1, X2, NUMBER_OF_POINTS);
         assert_relative_eq!(
             integrator.integrate(|x| x * (-x).exp()),
             1.0 - (1.0 + X2) * (-X2).exp(),
             epsilon = 1e-14
         );
         assert_relative_eq!(integrator.integrate(|x| x), X2 * X2 / 2.0, epsilon = 1e-12);
+
+        const X3: f64 = 100.0;
+        integrator.change_domain(X1, X3);
+        assert_relative_eq!(integrator.integrate(|x| x.cos()), X3.sin(), epsilon = 1e-12,);
     }
 
     #[cfg(feature = "rayon")]

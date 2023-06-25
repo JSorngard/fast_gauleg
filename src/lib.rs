@@ -7,14 +7,14 @@ use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIter
 /// If instantiated with `n` points it can integrate polynomials of degree `2n - 1` exactly.
 /// It is less accurate the less polynomial-like the given funciton is.
 #[derive(Debug, Clone, PartialEq)]
-pub struct QuadratureIntegrator {
+pub struct GLQIntegrator {
     start: f64,
     end: f64,
     xs_and_ws: Vec<f64>,
     points: usize,
 }
 
-impl QuadratureIntegrator {
+impl GLQIntegrator {
     #[must_use = "function returns a new instance and does not modify the input values"]
     /// Creates a new integrator that integrates functions over the given domain.
     pub fn new(start: f64, end: f64, points: usize) -> Self {
@@ -33,14 +33,14 @@ impl QuadratureIntegrator {
     /// once for each point in the domain.
     /// # Examples
     /// ```
-    /// # use gauss_legendre_quadrature::QuadratureIntegrator;
-    /// let integrator = QuadratureIntegrator::new(0.0, std::f64::consts::PI, 100);
+    /// # use gauss_legendre_quadrature::GLQIntegrator;
+    /// let integrator = GLQIntegrator::new(0.0, std::f64::consts::PI, 100);
     /// assert!((integrator.integrate(|x| x.sin()) - 2.0).abs() < 1e-15);
     /// ```
     /// Integrate a degree 5 polynomial with only 3 evaluation points:
     /// ```
-    /// # use gauss_legendre_quadrature::QuadratureIntegrator;
-    /// let integrator = QuadratureIntegrator::new(0.0, 1.0, 3);
+    /// # use gauss_legendre_quadrature::GLQIntegrator;
+    /// let integrator = GLQIntegrator::new(0.0, 1.0, 3);
     /// assert!((integrator.integrate(|x| x.powf(5.0)) - 1.0 / 6.0).abs() < 1e-15);
     /// ```
     pub fn integrate<F>(&self, mut f: F) -> f64
@@ -67,8 +67,8 @@ impl QuadratureIntegrator {
     /// This allows pre-computing function values, and then integrating.
     /// # Example
     /// ```
-    /// # use gauss_legendre_quadrature::QuadratureIntegrator;
-    /// let integrator = QuadratureIntegrator::new(0.0, std::f64::consts::PI, 100);
+    /// # use gauss_legendre_quadrature::GLQIntegrator;
+    /// let integrator = GLQIntegrator::new(0.0, std::f64::consts::PI, 100);
     /// let f_vals: Vec<f64> = integrator.abscissas().iter().map(|x| x.sin()).collect();
     /// assert!((integrator.integrate_slice(&f_vals) - 2.0).abs() < 1e-15);
     /// ```
@@ -263,7 +263,7 @@ mod test {
         const X1: f64 = 0.0;
         const X2: f64 = 10.0;
 
-        let mut integrator = QuadratureIntegrator::new(X1, X2, NUMBER_OF_POINTS);
+        let mut integrator = GLQIntegrator::new(X1, X2, NUMBER_OF_POINTS);
         assert_relative_eq!(
             integrator.integrate(|x| x * (-x).exp()),
             1.0 - (1.0 + X2) * (-X2).exp(),
@@ -282,7 +282,7 @@ mod test {
         const NUMBER_OF_POINTS: usize = 100;
         const X1: f64 = 0.0;
         const X2: f64 = 10.0;
-        let integrator = QuadratureIntegrator::new(X1, X2, NUMBER_OF_POINTS);
+        let integrator = GLQIntegrator::new(X1, X2, NUMBER_OF_POINTS);
         assert_relative_eq!(
             integrator.par_integrate(|x| x.cos()),
             X2.sin(),

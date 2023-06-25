@@ -2,6 +2,7 @@
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
 /// An object that can integrate any `FnMut(f64) -> f64` function over its domain.
+/// If the `rayon` feature is enabled it can also integrate any `Fn(f64) -> f64` function over its domain in parallel.
 /// Useful if you need to integrate many functions over the same domain.
 #[derive(Debug, Clone, PartialEq)]
 pub struct QuadratureIntegrator {
@@ -36,7 +37,7 @@ impl QuadratureIntegrator {
     }
 
     #[cfg(feature = "rayon")]
-    /// Integrates the given function over `self`s domain in parallel.
+    /// Integrates the given function over `self`'s domain in parallel.
     pub fn par_integrate<F>(&self, f: F) -> f64
     where
         F: Fn(f64) -> f64 + Sync,

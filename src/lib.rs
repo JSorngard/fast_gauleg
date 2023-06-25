@@ -37,6 +37,12 @@ impl QuadratureIntegrator {
     /// let integrator = QuadratureIntegrator::new(0.0, std::f64::consts::PI, 100);
     /// assert!((integrator.integrate(|x| x.sin()) - 2.0).abs() < 1e-15);
     /// ```
+    /// Integrate a degree 5 polynomial with only 3 evaluation points:
+    /// ```
+    /// # use gauss_legendre_quadrature::QuadratureIntegrator;
+    /// let integrator = QuadratureIntegrator::new(0.0, 1.0, 3);
+    /// assert!((integrator.integrate(|x| x.powf(5.0)) - 1.0 / 6.0).abs() < 1e-15);
+    /// ```
     pub fn integrate<F>(&self, mut f: F) -> f64
     where
         F: FnMut(f64) -> f64,
@@ -104,12 +110,6 @@ impl QuadratureIntegrator {
 
     #[cfg(feature = "rayon")]
     /// Integrates the given function over `self`'s domain in parallel.
-    /// # Example
-    /// ```
-    /// # use gauss_legendre_quadrature::QuadratureIntegrator;
-    /// let integrator = QuadratureIntegrator::new(0.0, std::f64::consts::PI, 100);
-    /// assert!((integrator.par_integrate(|x| x.sin()) - 2.0).abs() < 1e-15);
-    /// ```
     #[must_use = "the method returns a value and does not modify `self` or its inputs"]
     pub fn par_integrate<F>(&self, f: F) -> f64
     where

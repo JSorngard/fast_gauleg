@@ -82,6 +82,27 @@ impl QuadratureIntegrator {
     pub const fn points(&self) -> usize {
         self.points
     }
+
+    /// Change the domain of the integrator
+    pub fn change_domain(&mut self, start: f64, end: f64) {
+        let (xs, ws) = self.xs_and_ws.split_at_mut(self.points);
+        gauleg(start, end, xs, ws);
+        self.start = start;
+        self.end = end;
+    }
+
+    /// Changes the number of points used during integration. If the number is increased an
+    /// allocation is done
+    pub fn change_number_of_points(&mut self, points: usize) {
+        if points > self.points {
+            self.xs_and_ws = vec![0.0; 2 * points];
+        } else {
+            self.xs_and_ws.truncate(2 * points);
+        }
+        let (xs, ws) = self.xs_and_ws.split_at_mut(points);
+        gauleg(self.start, self.end, xs, ws);
+        self.points = points;
+    }
 }
 
 /// Computes the weights and abscissas used when integrating a function

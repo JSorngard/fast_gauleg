@@ -9,3 +9,7 @@ edition = "2021"
 approx = "0.5.1"
 
 [dependencies]
+rayon = {version = "1.7", optional = true}
+
+[features]
+rayon = ["dep:rayon"]

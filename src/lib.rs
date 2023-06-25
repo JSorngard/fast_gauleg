@@ -1,20 +1,16 @@
-use std::f64::consts::PI;
-
-type Float = f64;
-
 /// An object that can integrate any `FnMut(f64) -> f64` function over its domain.
 /// Useful if you need to integrate many functions over the same domain.
 #[derive(Debug, Clone, PartialEq)]
 pub struct QuadratureIntegrator {
-    start: Float,
-    end: Float,
-    xs_and_ws: Vec<Float>,
+    start: f64,
+    end: f64,
+    xs_and_ws: Vec<f64>,
     points: usize,
 }
 
 impl QuadratureIntegrator {
     #[must_use = "function returns a new instance and does not modify the input values"]
-    pub fn new(start: Float, end: Float, points: usize) -> Self {
+    pub fn new(start: f64, end: f64, points: usize) -> Self {
         let mut xs_and_ws = vec![0.0; 2 * points];
         let (xs, ws) = xs_and_ws.split_at_mut(points);
         gauleg(start, end, xs, ws);
@@ -28,9 +24,9 @@ impl QuadratureIntegrator {
 
     /// Integrates the given function over `self`'s domain. The given closure will be called
     /// once for each point in the domain.
-    pub fn integrate<F>(&self, mut f: F) -> Float
+    pub fn integrate<F>(&self, mut f: F) -> f64
     where
-        F: FnMut(Float) -> Float,
+        F: FnMut(f64) -> f64,
     {
         let (xs, ws) = self.xs_and_ws.split_at(self.points);
         xs.iter().zip(ws.iter()).map(|(x, w)| w * f(*x)).sum()
@@ -39,14 +35,14 @@ impl QuadratureIntegrator {
     /// Returns the first point of the integration domain
     #[must_use = "the method returns a value and does not modify `self` or its inputs"]
     #[inline(always)]
-    pub const fn start(&self) -> Float {
+    pub const fn start(&self) -> f64 {
         self.start
     }
 
     /// Returns the last point of the integration domain
     #[must_use = "the method returns a value and does not modify `self` or its inputs"]
     #[inline(always)]
-    pub const fn end(&self) -> Float {
+    pub const fn end(&self) -> f64 {
         self.end
     }
 
@@ -62,30 +58,26 @@ impl QuadratureIntegrator {
 /// in the domain [x1, x2] using Gauss-Legendre quadrature.
 /// # Panic
 /// Panics if the lengths of the slices are different
-pub fn gauleg(x1: Float, x2: Float, x: &mut [Float], w: &mut [Float]) {
+pub fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
     assert_eq!(x.len(), w.len());
 
-    const EPS: Float = 1e-14;
+    const EPS: f64 = 1e-14;
 
     let n = x.len();
-    let nf = n as Float;
+    let nf = n as f64;
     let xm = 0.5 * (x2 + x1);
     let xl = 0.5 * (x2 - x1);
 
-    let mut z: Float;
-    let mut p1: Float;
-    let mut p2: Float;
-    let mut p3: Float;
-    let mut pp: Float;
     for i in 0..(n + 1) / 2 {
-        z = (PI * (i as Float + 0.75) / (nf + 0.5)).cos();
+        let mut z = (std::f64::consts::PI * (i as f64 + 0.75) / (nf + 0.5)).cos();
+        let mut pp: f64;
         loop {
-            p1 = 1.0;
-            p2 = 0.0;
+            let mut p1 = 1.0;
+            let mut p2 = 0.0;
             for j in 0..n {
-                p3 = p2;
+                let p3 = p2;
                 p2 = p1;
-                p1 = (((2 * j + 1) as Float) * z * p2 - (j as Float) * p3) / (j as Float + 1.0);
+                p1 = (((2 * j + 1) as f64) * z * p2 - (j as f64) * p3) / (j as f64 + 1.0);
             }
             pp = nf * (z * p1 - p2) / (z * z - 1.0);
             let z1 = z;
@@ -113,9 +105,9 @@ pub fn gauleg(x1: Float, x2: Float, x: &mut [Float], w: &mut [Float]) {
 /// assert!(
 ///     (gauss_legendre_quadrature(0.0, end, 100, f) - (1.0 - (1.0 + end) * (-end).exp())).abs() < 1e-14);
 /// ```
-pub fn gauss_legendre_quadrature<F>(start: Float, end: Float, points: usize, mut f: F) -> Float
+pub fn gauss_legendre_quadrature<F>(start: f64, end: f64, points: usize, mut f: F) -> f64
 where
-    F: FnMut(Float) -> Float,
+    F: FnMut(f64) -> f64,
 {
     let mut xs = vec![0.0; points];
     let mut ws = vec![0.0; points];
@@ -134,15 +126,15 @@ mod test {
     #[test]
     fn check_gauss_legendre_quadrature() {
         const NUMBER_OF_POINTS: usize = 100;
-        const X1: Float = 0.0;
-        const X2: Float = 10.0;
+        const X1: f64 = 0.0;
+        const X2: f64 = 10.0;
 
         let mut xs = [0.0; NUMBER_OF_POINTS];
         let mut ws = [0.0; NUMBER_OF_POINTS];
 
         gauleg(X1, X2, &mut xs, &mut ws);
 
-        fn func(x: Float) -> Float {
+        fn func(x: f64) -> f64 {
             x * (-x).exp()
         }
 
@@ -157,8 +149,8 @@ mod test {
     #[test]
     fn check_integrator() {
         const NUMBER_OF_POINTS: usize = 100;
-        const X1: Float = 0.0;
-        const X2: Float = 10.0;
+        const X1: f64 = 0.0;
+        const X2: f64 = 10.0;
 
         let integrator = QuadratureIntegrator::new(X1, X2, NUMBER_OF_POINTS);
         assert_relative_eq!(

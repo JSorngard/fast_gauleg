@@ -10,6 +10,9 @@ use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIter
 pub struct GLQIntegrator {
     start: f64,
     end: f64,
+    // We use only one allocation for the abscissas and weights
+    // to increase that chances that both end up in the cache during
+    // the same fetch from memory when the number of points is small.
     xs_and_ws: Vec<f64>,
     points: usize,
 }

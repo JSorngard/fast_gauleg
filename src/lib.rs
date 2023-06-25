@@ -220,7 +220,7 @@ mod test {
 
         const X3: f64 = 100.0;
         integrator.change_domain(X1, X3);
-        assert_relative_eq!(integrator.integrate(|x| x.cos()), X3.sin(), epsilon = 1e-12,);
+        assert_relative_eq!(integrator.integrate(|x| x.cos()), X3.sin(), epsilon = 1e-12);
     }
 
     #[cfg(feature = "rayon")]

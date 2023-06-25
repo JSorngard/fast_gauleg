@@ -5,7 +5,7 @@ use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIter
 /// If the `rayon` feature is enabled it can also integrate `Fn(f64) -> f64` functions over its domain in parallel.
 /// Useful if you need to integrate many functions over the same domain.
 /// If instantiated with `n` points it can integrate polynomials of degree `2n - 1` exactly.
-/// It is less accurate the less polynomial-like the given funciton is.
+/// It is less accurate the less polynomial-like the given funciton is, and the less it conforms to the degree-bound.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GLQIntegrator {
     start: f64,

@@ -2,6 +2,8 @@ use std::f64::consts::PI;
 
 type Float = f64;
 
+/// An object that can integrate any `FnMut(f64) -> f64` function over its domain.
+/// Useful if you need to integrate many functions over the same domain.
 #[derive(Debug, Clone, PartialEq)]
 pub struct QuadratureIntegrator {
     start: Float,
@@ -11,6 +13,7 @@ pub struct QuadratureIntegrator {
 }
 
 impl QuadratureIntegrator {
+    #[must_use = "function returns a new instance and does not modify the input values"]
     pub fn new(start: Float, end: Float, points: usize) -> Self {
         let mut xs_and_ws = vec![0.0; 2 * points];
         let (xs, ws) = xs_and_ws.split_at_mut(points);
@@ -23,12 +26,35 @@ impl QuadratureIntegrator {
         }
     }
 
+    /// Integrates the given function over `self`'s domain. The given closure will be called
+    /// once for each point in the domain.
     pub fn integrate<F>(&self, mut f: F) -> Float
     where
         F: FnMut(Float) -> Float,
     {
         let (xs, ws) = self.xs_and_ws.split_at(self.points);
         xs.iter().zip(ws.iter()).map(|(x, w)| w * f(*x)).sum()
+    }
+
+    /// Returns the first point of the integration domain
+    #[must_use = "the method returns a value and does not modify `self` or its inputs"]
+    #[inline(always)]
+    pub const fn start(&self) -> Float {
+        self.start
+    }
+
+    /// Returns the last point of the integration domain
+    #[must_use = "the method returns a value and does not modify `self` or its inputs"]
+    #[inline(always)]
+    pub const fn end(&self) -> Float {
+        self.end
+    }
+
+    /// Returns the number of points in the integration domain
+    #[must_use = "the method returns a value and does not modify `self` or its inputs"]
+    #[inline(always)]
+    pub const fn points(&self) -> usize {
+        self.points
     }
 }
 
@@ -76,7 +102,7 @@ pub fn gauleg(x1: Float, x2: Float, x: &mut [Float], w: &mut [Float]) {
 }
 
 /// Integrates the given function from `start` to `end`
-/// using Gauss-Legendre quadrature with `number_of_points` points.
+/// using Gauss-Legendre quadrature with `points` points.
 /// # Example
 /// ```
 /// # use numerical_recipes::gauss_legendre_quadrature;
@@ -85,20 +111,18 @@ pub fn gauleg(x1: Float, x2: Float, x: &mut [Float], w: &mut [Float]) {
 /// }
 /// let end = 10.0;
 /// assert!(
-///     (gauss_legendre_quadrature(0.0, end, f, 100) - (1.0 - (1.0 + end) * (-end).exp())).abs() < 1e-14);
+///     (gauss_legendre_quadrature(0.0, end, 100, f) - (1.0 - (1.0 + end) * (-end).exp())).abs() < 1e-14);
 /// ```
-pub fn gauss_legendre_quadrature(
-    start: Float,
-    end: Float,
-    function_to_integrate: fn(Float) -> Float,
-    number_of_points: usize,
-) -> Float {
-    let mut xs = vec![0.0; number_of_points];
-    let mut ws = vec![0.0; number_of_points];
+pub fn gauss_legendre_quadrature<F>(start: Float, end: Float, points: usize, mut f: F) -> Float
+where
+    F: FnMut(Float) -> Float,
+{
+    let mut xs = vec![0.0; points];
+    let mut ws = vec![0.0; points];
     gauleg(start, end, &mut xs, &mut ws);
     xs.into_iter()
         .zip(ws.into_iter())
-        .map(|(x, w)| w * function_to_integrate(x))
+        .map(|(x, w)| w * f(x))
         .sum()
 }
 
@@ -125,7 +149,7 @@ mod test {
         // integrate func from X1 to X2.
         assert_relative_eq!(
             1.0 - (1.0 + X2) * (-X2).exp(),
-            gauss_legendre_quadrature(X1, X2, func, NUMBER_OF_POINTS),
+            gauss_legendre_quadrature(X1, X2, NUMBER_OF_POINTS, func),
             epsilon = 1e-14,
         );
     }
@@ -142,5 +166,6 @@ mod test {
             1.0 - (1.0 + X2) * (-X2).exp(),
             epsilon = 1e-14
         );
+        assert_relative_eq!(integrator.integrate(|x| x), X2 * X2 / 2.0, epsilon = 1e-12)
     }
 }

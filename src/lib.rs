@@ -1,6 +1,40 @@
 /// An object that can integrate `fn(f64) -> f64` functions.
 /// If instantiated with `n` points it can integrate polynomials of degree `2n - 1` exactly.
 /// It is less accurate the less polynomial-like the given function is, and the less it conforms to the degree-bound.
+/// # Examples
+/// Integrate degree 5 polynomials with only 3 evaluation points:
+/// ```
+/// # use gauss_legendre_quadrature::GLQIntegrator;
+/// # use approx::assert_relative_eq;
+/// let integrator = GLQIntegrator::new(3);
+/// assert_relative_eq!(
+///     integrator.integrate(0.0, 1.0, |x| x.powf(5.0)),
+///     1.0 / 6.0,
+///     epsilon = 1e-15,
+/// );
+/// assert_relative_eq!(
+///     integrator.integrate(-1.0, 1.0, |x| x.powf(5.0) - 2.0 * x.powf(4.0) + 1.0),
+///     6.0 / 5.0,
+///     epsilon = 1e-14, // Slightly less accurate
+/// );
+/// ```
+/// Non-polynomial functions need more points to evaluate correctly
+/// ```
+/// # use gauss_legendre_quadrature::GLQIntegrator;
+/// # use approx::assert_relative_eq;
+/// let mut integrator = GLQIntegrator::new(3);
+/// assert_relative_eq!(
+///     integrator.integrate(0.0, std::f64::consts::PI, |x| x.sin()),
+///     2.0,
+///     epsilon = 0.01 // Very bad accuracy
+/// );
+/// integrator.change_number_of_points(58);
+/// assert_relative_eq!(
+///     integrator.integrate(0.0, std::f64::consts::PI, |x| x.sin()),
+///     2.0,
+///     epsilon = 1e-15 // Much better!
+/// );
+/// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct GLQIntegrator {
     // We use only one allocation for the abscissas and weights
@@ -20,42 +54,7 @@ impl GLQIntegrator {
         Self { xs_and_ws, points }
     }
 
-    /// Integrates the given function over the given domain. The given closure will be called
-    /// once for each evaluation point.
-    /// # Examples
-    /// Integrate degree 5 polynomials with only 3 evaluation points:
-    /// ```
-    /// # use gauss_legendre_quadrature::GLQIntegrator;
-    /// # use approx::assert_relative_eq;
-    /// let integrator = GLQIntegrator::new(3);
-    /// assert_relative_eq!(
-    ///     integrator.integrate(0.0, 1.0, |x| x.powf(5.0)),
-    ///     1.0 / 6.0,
-    ///     epsilon = 1e-15,
-    /// );
-    /// assert_relative_eq!(
-    ///     integrator.integrate(-1.0, 1.0, |x| x.powf(5.0) - 2.0 * x.powf(4.0) + 1.0),
-    ///     6.0 / 5.0,
-    ///     epsilon = 1e-14, // Slightly less accurate
-    /// );
-    /// ```
-    /// Non-polynomial functions need more points to evaluate correctly
-    /// ```
-    /// # use gauss_legendre_quadrature::GLQIntegrator;
-    /// # use approx::assert_relative_eq;
-    /// let mut integrator = GLQIntegrator::new(3);
-    /// assert_relative_eq!(
-    ///     integrator.integrate(0.0, std::f64::consts::PI, |x| x.sin()),
-    ///     2.0,
-    ///     epsilon = 0.01 // Very bad accuracy
-    /// );
-    /// integrator.change_number_of_points(58);
-    /// assert_relative_eq!(
-    ///     integrator.integrate(0.0, std::f64::consts::PI, |x| x.sin()),
-    ///     2.0,
-    ///     epsilon = 1e-15 // Much better!
-    /// );
-    /// ```
+    /// Integrates the given function over the given domain.
     pub fn integrate(&self, start: f64, end: f64, f: fn(f64) -> f64) -> f64 {
         let (xs, ws) = self.xs_and_ws.split_at(self.points);
         xs.iter()

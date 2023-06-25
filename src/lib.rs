@@ -31,17 +31,22 @@ impl GLQIntegrator {
 
     /// Integrates the given function over `self`'s domain. The given closure will be called
     /// once for each point in the domain.
-    /// # Examples
+    /// # Example
+    /// Integrate degree 5 polynomials with only 3 evaluation points:
     /// ```
     /// # use gauss_legendre_quadrature::GLQIntegrator;
-    /// let integrator = GLQIntegrator::new(0.0, std::f64::consts::PI, 100);
-    /// assert!((integrator.integrate(|x| x.sin()) - 2.0).abs() < 1e-15);
-    /// ```
-    /// Integrate a degree 5 polynomial with only 3 evaluation points:
-    /// ```
-    /// # use gauss_legendre_quadrature::GLQIntegrator;
+    /// # use approx::assert_relative_eq;
     /// let integrator = GLQIntegrator::new(0.0, 1.0, 3);
-    /// assert!((integrator.integrate(|x| x.powf(5.0)) - 1.0 / 6.0).abs() < 1e-15);
+    /// assert_relative_eq!(
+    ///     integrator.integrate(|x| x.powf(5.0)),
+    ///     1.0 / 6.0,
+    ///     epsilon = 1e-15,
+    /// );
+    /// assert_relative_eq!(
+    ///     integrator.integrate(|x| x.powf(5.0) - 2.0 * x.powf(4.0) + 1.0),
+    ///     1.0 / 6.0 - 2.0 / 5.0 + 1.0,
+    ///     epsilon = 1e-14, // Slightly less accurate
+    /// );
     /// ```
     pub fn integrate<F>(&self, mut f: F) -> f64
     where
@@ -68,9 +73,10 @@ impl GLQIntegrator {
     /// # Example
     /// ```
     /// # use gauss_legendre_quadrature::GLQIntegrator;
-    /// let integrator = GLQIntegrator::new(0.0, std::f64::consts::PI, 100);
+    /// # use approx::assert_relative_eq;
+    /// let integrator = GLQIntegrator::new(0.0, std::f64::consts::PI, 65);
     /// let f_vals: Vec<f64> = integrator.abscissas().iter().map(|x| x.sin()).collect();
-    /// assert!((integrator.integrate_slice(&f_vals) - 2.0).abs() < 1e-15);
+    /// assert_relative_eq!(integrator.integrate_slice(&f_vals), 2.0);
     /// ```
     /// # Panic
     /// Panics if the length of the given slice is not the same as the number of points in the integrator.

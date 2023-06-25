@@ -1,8 +1,8 @@
 #[cfg(feature = "rayon")]
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
-/// An object that can integrate `FnMut(f64) -> f64` functions.
-/// If the `rayon` feature is enabled it can also integrate `Fn(f64) -> f64` functions in parallel.
+/// An object that can integrate `fn(f64) -> f64` functions.
+/// If the `rayon` feature is enabled it can also integrate in parallel.
 /// If instantiated with `n` points it can integrate polynomials of degree `2n - 1` exactly.
 /// It is less accurate the less polynomial-like the given function is, and the less it conforms to the degree-bound.
 #[derive(Debug, Clone, PartialEq)]
@@ -26,7 +26,7 @@ impl GLQIntegrator {
 
     /// Integrates the given function over the given domain. The given closure will be called
     /// once for each evaluation point.
-    /// # Example
+    /// # Examples
     /// Integrate degree 5 polynomials with only 3 evaluation points:
     /// ```
     /// # use gauss_legendre_quadrature::GLQIntegrator;
@@ -43,7 +43,7 @@ impl GLQIntegrator {
     ///     epsilon = 1e-14, // Slightly less accurate
     /// );
     /// ```
-    /// Trigonometric functions need more points to evaluate correctly
+    /// Non-polynomial functions need more points to evaluate correctly
     /// ```
     /// # use gauss_legendre_quadrature::GLQIntegrator;
     /// # use approx::assert_relative_eq;
@@ -60,10 +60,7 @@ impl GLQIntegrator {
     ///     epsilon = 1e-15 // Much better!
     /// );
     /// ```
-    pub fn integrate<F>(&self, start: f64, end: f64, mut f: F) -> f64
-    where
-        F: FnMut(f64) -> f64,
-    {
+    pub fn integrate(&self, start: f64, end: f64, f: fn(f64) -> f64) -> f64 {
         let (xs, ws) = self.xs_and_ws.split_at(self.points);
         xs.iter()
             .zip(ws.iter())
@@ -86,11 +83,19 @@ impl GLQIntegrator {
 
     #[cfg(feature = "rayon")]
     /// Integrates the given function over the given domain in parallel.
+    /// # Example
+    /// ```
+    /// # use gauss_legendre_quadrature::GLQIntegrator;
+    /// # use approx::assert_relative_eq;
+    /// let integrator = GLQIntegrator::new(100);
+    /// assert_relative_eq!(
+    ///     integrator.par_integrate(0.0, 100.0, |x| (-x).exp() * x.sin()),
+    ///     0.5,
+    ///     epsilon = 1e-12,
+    /// );
+    /// ```
     #[must_use = "the method returns a value and does not modify `self` or its inputs"]
-    pub fn par_integrate<F>(&self, start: f64, end: f64, f: F) -> f64
-    where
-        F: Fn(f64) -> f64 + Sync,
-    {
+    pub fn par_integrate(&self, start: f64, end: f64, f: fn(f64) -> f64) -> f64 {
         let (xs, ws) = self.xs_and_ws.split_at(self.points);
         xs.par_iter()
             .zip(ws.par_iter())
@@ -246,6 +251,11 @@ mod test {
             integrator.par_integrate(X1, X2, |x| x.cos()),
             X2.sin(),
             epsilon = 1e-14
+        );
+        assert_relative_eq!(
+            integrator.par_integrate(0.0, 100.0, |x| (-x).exp() * x.sin()),
+            0.5,
+            epsilon = 1e-12,
         );
     }
 }

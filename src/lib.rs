@@ -145,10 +145,7 @@ pub fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
 /// assert!(
 ///     (quad(0.0, end, 100, f) - (1.0 - (1.0 + end) * (-end).exp())).abs() < 1e-14);
 /// ```
-pub fn quad<F>(start: f64, end: f64, points: usize, mut f: F) -> f64
-where
-    F: FnMut(f64) -> f64,
-{
+pub fn quad(start: f64, end: f64, points: usize, f: fn(f64) -> f64) -> f64 {
     let mut xs = vec![0.0; points];
     let mut ws = vec![0.0; points];
     gauleg(start, end, &mut xs, &mut ws);

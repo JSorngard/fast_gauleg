@@ -43,6 +43,23 @@ impl GLQIntegrator {
     ///     epsilon = 1e-14, // Slightly less accurate
     /// );
     /// ```
+    /// Trigonometric functions need more points to evaluate correctly
+    /// ```
+    /// # use gauss_legendre_quadrature::GLQIntegrator;
+    /// # use approx::assert_relative_eq;
+    /// let mut integrator = GLQIntegrator::new(3);
+    /// assert_relative_eq!(
+    ///     integrator.integrate(0.0, std::f64::consts::PI, |x| x.sin()),
+    ///     2.0,
+    ///     epsilon = 0.01 // Very bad accuracy
+    /// );
+    /// integrator.change_number_of_points(58);
+    /// assert_relative_eq!(
+    ///     integrator.integrate(0.0, std::f64::consts::PI, |x| x.sin()),
+    ///     2.0,
+    ///     epsilon = 1e-15 // Much better!
+    /// );
+    /// ```
     pub fn integrate<F>(&self, start: f64, end: f64, mut f: F) -> f64
     where
         F: FnMut(f64) -> f64,

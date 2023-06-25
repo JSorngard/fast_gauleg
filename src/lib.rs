@@ -65,6 +65,7 @@ impl QuadratureIntegrator {
     /// ```
     /// # Panic
     /// Panics if the length of the given slice is not the same as the number of points in the integrator.
+    #[must_use = "the method returns a value and does not modify `self` or its inputs"]
     pub fn integrate_cached(&self, f_vals: &[f64]) -> f64 {
         assert_eq!(f_vals.len(), self.points);
         self.xs_and_ws
@@ -87,6 +88,7 @@ impl QuadratureIntegrator {
     /// ```
     /// # Panic
     /// Panics if the length of the given slice is not the same as the number of points in the integrator.
+    #[must_use = "the method returns a value and does not modify `self` or its inputs"]
     pub fn par_integrate_cached(&self, f_vals: &[f64]) -> f64 {
         assert_eq!(f_vals.len(), self.points);
         self.xs_and_ws

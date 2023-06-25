@@ -28,7 +28,7 @@ impl QuadratureIntegrator {
 
     /// Integrates the given function over `self`'s domain. The given closure will be called
     /// once for each point in the domain.
-    /// # Example
+    /// # Examples
     /// ```
     /// # use gauss_legendre_quadrature::QuadratureIntegrator;
     /// let integrator = QuadratureIntegrator::new(0.0, std::f64::consts::PI, 100);
@@ -40,6 +40,57 @@ impl QuadratureIntegrator {
     {
         let (xs, ws) = self.xs_and_ws.split_at(self.points);
         xs.iter().zip(ws.iter()).map(|(x, w)| w * f(*x)).sum()
+    }
+
+    /// Returns a slice of the integrators abscissas, the points at which the integrator
+    /// evaluates the functions it integrates.
+    pub fn abscissas(&self) -> &[f64] {
+        &self.xs_and_ws[..self.points]
+    }
+
+    /// Returns a slice of the integrators weights. The function values are multiplied by these
+    /// numbers before they are summed.
+    pub fn weights(&self) -> &[f64] {
+        &self.xs_and_ws[self.points..]
+    }
+
+    /// Integrates a function that returns the given values at the integrator's abscissas.
+    /// This allows pre-computing function values, and then integrating.
+    /// # Example
+    /// ```
+    /// # use gauss_legendre_quadrature::QuadratureIntegrator;
+    /// let integrator = QuadratureIntegrator::new(0.0, std::f64::consts::PI, 100);
+    /// let f_vals: Vec<f64> = integrator.abscissas().iter().map(|x| x.sin()).collect();
+    /// assert!((integrator.integrate_cached(&f_vals) - 2.0).abs() < 1e-15);
+    /// ```
+    pub fn integrate_cached(&self, f_vals: &[f64]) -> f64 {
+        assert_eq!(f_vals.len(), self.points);
+        self.xs_and_ws
+            .iter()
+            .skip(self.points)
+            .enumerate()
+            .map(|(i, w)| w * f_vals[i])
+            .sum()
+    }
+
+    #[cfg(feature = "rayon")]
+    /// Integrates a function that returns the given values at the integrator's abscissas  (in parallel).
+    /// This allows pre-computing function values, and then integrating.
+    /// # Example
+    /// ```
+    /// # use gauss_legendre_quadrature::QuadratureIntegrator;
+    /// let integrator = QuadratureIntegrator::new(0.0, std::f64::consts::PI, 100);
+    /// let f_vals: Vec<f64> = integrator.abscissas().iter().map(|x| x.sin()).collect();
+    /// assert!((integrator.par_integrate_cached(&f_vals) - 2.0).abs() < 1e-15);
+    /// ```
+    pub fn par_integrate_cached(&self, f_vals: &[f64]) -> f64 {
+        assert_eq!(f_vals.len(), self.points);
+        self.xs_and_ws
+            .par_iter()
+            .skip(self.points)
+            .enumerate()
+            .map(|(i, w)| w * f_vals[i])
+            .sum()
     }
 
     #[cfg(feature = "rayon")]

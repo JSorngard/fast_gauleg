@@ -91,12 +91,23 @@ impl QuadratureIntegrator {
         self.end = end;
     }
 
-    /// Changes the number of points used during integration. If the number is increased an
-    /// allocation is done, if is is decreased the current allocation is reused (and nothing is freed).
+    /// Changes the number of points used during integration.
+    /// If the number is not increased the old allocation is reused.
     pub fn change_number_of_points(&mut self, points: usize) {
         self.xs_and_ws.resize(2 * points, 0.0);
         let (xs, ws) = self.xs_and_ws.split_at_mut(points);
         gauleg(self.start, self.end, xs, ws);
+        self.points = points;
+    }
+
+    /// Change the number of integration points and the integration domain. If the number of integration points
+    /// is not increased the old allocation is reused.
+    pub fn change_number_of_points_and_domain(&mut self, start: f64, end: f64, points: usize) {
+        self.xs_and_ws.resize(2 * points, 0.0);
+        let (xs, ws) = self.xs_and_ws.split_at_mut(points);
+        gauleg(start, end, xs, ws);
+        self.start = start;
+        self.end = end;
         self.points = points;
     }
 }

@@ -20,6 +20,7 @@
 //!     quad(-1.0, 1.0, |x| 0.25 * (3.0 * x.powf(2.0) - 1.0) * (5.0 * x.powf(3.0) - 3.0 * x), pts),
 //!     0.0,
 //! );
+//! // Integrating more complicated polynomials or integrating outside [-1, 1] can reduce accuracy
 //! assert_relative_eq!(
 //!     quad(-5.0, 2.0, |x| 0.125 * (63.0 * x.powf(5.0) - 70.0 * x.powf(3.0) + 15.0 * x), pts),
 //!     -305781.0 / 16.0,
@@ -195,7 +196,7 @@ pub fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
     }
 }
 
-/// Integrates the given function from `start` to `end`
+/// Integrates the given function over the interval `[start, end]`
 /// using [Gauss-Legendre quadrature](https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_quadrature)
 /// with `points` points. With `n` points it can integrate polynomials of degree `2n - 1` exactly.
 /// The result will be less accurate the less polynomial-like the function is,

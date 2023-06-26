@@ -98,7 +98,8 @@ impl GLQIntegrator {
 /// # Panic
 /// Panics if the lengths of the slices are different
 pub fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
-    /// This function is ported Fortran code, and is not very ideomatic.
+    // This function is ported Fortran code, and is not very ideomatic.
+    // The original code can be found in the book Numerical Recipes: http://numerical.recipes/
     assert_eq!(x.len(), w.len());
 
     const EPS: f64 = 1e-14;

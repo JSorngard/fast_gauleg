@@ -52,7 +52,7 @@
 //! for n in 0..=19 {
 //!     assert_relative_eq!(
 //!         integrator.integrate(-1.0, 1.0, |x| x.powf(n.into())),
-//!         (1.0 + if n % 2 == 0 {1.0} else {-1.0}) / f64::from(n + 1),
+//!         if n % 2 == 0 {2.0} else {0.0} / f64::from(n + 1),
 //!         epsilon = 1e-13,
 //!     );
 //! }

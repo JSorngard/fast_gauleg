@@ -1,3 +1,16 @@
+//! This crate contains tools for numerical integration using [Gauss-Legendre quadrature](https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_quadrature).
+//! This is a method that allows integration of polynomial functions using very few evaluation points.
+//! # Example
+//! Integrate a degree five polynomial while only evaluating it at three points:
+//! ```
+//! # use gauss_legendre_quadrature::quad;
+//! use approx::assert_relative_eq;
+//! assert_relative_eq!(
+//!     quad(-1.0, 1.0, |x| 0.25 * (3.0 * x.powf(2.0) - 1.0) * (5.0 * x.powf(3.0) - 3.0 * x), 3.try_into().unwrap()),
+//!     0.0,
+//! );
+//!```
+
 use core::num::NonZeroUsize;
 
 /// An object that can integrate `fn(f64) -> f64` functions.

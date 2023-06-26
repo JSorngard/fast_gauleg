@@ -6,7 +6,7 @@
 //! # Examples
 //! Integrate a degree five polynomial while only evaluating it at three points:
 //! ```
-//! # use gauss_legendre_quadrature::quad;
+//! use gauss_legendre_quadrature::quad;
 //! // This macro is used in the docs of this crate to compare floating point values.
 //! // The assertion succeeds if the two values are within floating point error of each other,
 //! // or within an optional epsilon.
@@ -23,7 +23,7 @@
 //! assert_relative_eq!(
 //!     quad(-5.0, 2.0, |x| 0.125 * (63.0 * x.powf(5.0) - 70.0 * x.powf(3.0) + 15.0 * x), pts),
 //!     -305781.0 / 16.0,
-//!     epsilon = 1e-10, // Not as accurate
+//!     epsilon = 1e-10, // Not as accurate outside [-1, 1]
 //! );
 //!```
 //! Integrate a trancendental function:
@@ -35,6 +35,23 @@
 //!     0.5 - f64::ln(2.0).cos() + f64::ln(2.0).sin(),
 //!     epsilon = 1e-14
 //! );   
+//! ```
+//! If many integrations need to be done the crate provides [`GLQIntegrator`], which allows
+//! some computation to be reused:
+//! ```
+//! # use approx::assert_relative_eq;
+//! use gauss_legendre_quadrature::GLQIntegrator;
+//! use std::f64::consts::PI;
+//! let integrator = GLQIntegrator::new(10.try_into().unwrap());
+//! assert_relative_eq!(
+//!     integrator.integrate(0.0, 2.0*PI, |theta| theta.sin() * theta.cos()),
+//!     0.0,
+//! );
+//! assert_relative_eq!(
+//!     integrator.integrate(-1.0, 2.0, |x| x.powf(19.0)),
+//!     209715.0 / 4.0,
+//!     epsilon = 1e-8,
+//! );
 //! ```
 
 use core::num::NonZeroUsize;

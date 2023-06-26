@@ -47,11 +47,13 @@
 //!     integrator.integrate(0.0, 2.0*PI, |theta| theta.sin() * theta.cos()),
 //!     0.0,
 //! );
-//! assert_relative_eq!(
-//!     integrator.integrate(-1.0, 2.0, |x| x.powf(19.0)),
-//!     209715.0 / 4.0,
-//!     epsilon = 1e-8,
-//! );
+//! for n in 0..=19 {
+//!     assert_relative_eq!(
+//!         integrator.integrate(-1.0, 1.0, |x| x.powf(n.into())),
+//!         (1.0 + if n % 2 == 0 {1.0} else {-1.0}) / f64::from(n + 1),
+//!         epsilon = 1e-13,
+//!     );
+//! }
 //! ```
 
 use core::num::NonZeroUsize;
@@ -113,7 +115,7 @@ impl GLQIntegrator {
     }
 
     /// Integrates the given function over the given domain.
-    pub fn integrate(&self, start: f64, end: f64, f: fn(f64) -> f64) -> f64 {
+    pub fn integrate<F: Fn(f64) -> f64>(&self, start: f64, end: f64, f: F) -> f64 {
         let (xs, ws) = self.xs_and_ws.split_at(self.points.into());
         xs.iter()
             .zip(ws.iter())
@@ -220,7 +222,7 @@ pub fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
 ///     epsilon = 1e-14,
 /// );
 /// ```
-pub fn quad(start: f64, end: f64, f: fn(f64) -> f64, points: NonZeroUsize) -> f64 {
+pub fn quad<F: Fn(f64) -> f64>(start: f64, end: f64, f: F, points: NonZeroUsize) -> f64 {
     let mut xs = vec![0.0; points.into()];
     let mut ws = vec![0.0; points.into()];
     gauleg(start, end, &mut xs, &mut ws);

@@ -38,7 +38,7 @@
 #[derive(Debug, Clone, PartialEq)]
 pub struct GLQIntegrator {
     // We use only one allocation for the abscissas and weights
-    // to increase that chances that both end up in the cache during
+    // to increase the chances that both end up in the cache during
     // the same fetch from memory when the number of points is small.
     xs_and_ws: Vec<f64>,
     points: usize,

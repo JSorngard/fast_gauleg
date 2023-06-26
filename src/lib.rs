@@ -127,7 +127,8 @@ impl GLQIntegrator {
             * 0.5
     }
 
-    /// Returns a slice of the integrators abscissas.
+    /// Returns a slice of the integrators abscissas. These are points in the `[-1, 1]` interval
+    /// that get mapped to the given integration interval, and then given as input to the integrands.
     pub fn abscissas(&self) -> &[f64] {
         &self.xs_and_ws[..self.points.get()]
     }

@@ -1,15 +1,41 @@
 //! This crate contains tools for numerical integration using [Gauss-Legendre quadrature](https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_quadrature).
 //! This is a method that allows integration of polynomial functions using very few evaluation points.
-//! # Example
+//! A quadrature using `n` points can exactly integrate a polynomial of degree `2n - 1` in the interval `[-1, 1]`.
+//! Non-polynomials will need more evaluation points, and the answer will be less accurate
+//! the less polynomial-like the given function is and the more it violates the degree bound.
+//! # Examples
 //! Integrate a degree five polynomial while only evaluating it at three points:
 //! ```
 //! # use gauss_legendre_quadrature::quad;
+//! // This macro is used in the docs of this crate to compare floating point values.
+//! // The assertion succeeds if the two values are within floating point error of each other,
+//! // or within an optional epsilon.
 //! use approx::assert_relative_eq;
+//! use core::num::NonZeroUsize;
+//!
+//! let pts = NonZeroUsize::new(3).unwrap();
+//!
+//! // Check the orthogonality of Legendre polynomials of degree 2 and 3:
 //! assert_relative_eq!(
-//!     quad(-1.0, 1.0, |x| 0.25 * (3.0 * x.powf(2.0) - 1.0) * (5.0 * x.powf(3.0) - 3.0 * x), 3.try_into().unwrap()),
+//!     quad(-1.0, 1.0, |x| 0.25 * (3.0 * x.powf(2.0) - 1.0) * (5.0 * x.powf(3.0) - 3.0 * x), pts),
 //!     0.0,
 //! );
+//! assert_relative_eq!(
+//!     quad(-5.0, 2.0, |x| 0.125 * (63.0 * x.powf(5.0) - 70.0 * x.powf(3.0) + 15.0 * x), pts),
+//!     -305781.0 / 16.0,
+//!     epsilon = 1e-10, // Not as accurate
+//! );
 //!```
+//! Integrate a trancendental function:
+//! ```
+//! # use approx::assert_relative_eq;
+//! # use gauss_legendre_quadrature::quad;
+//! assert_relative_eq!(
+//!     quad(0.0, 1.0, |x| (x + 1.0).ln().sin(), 10.try_into().unwrap()),
+//!     0.5 - f64::ln(2.0).cos() + f64::ln(2.0).sin(),
+//!     epsilon = 1e-14
+//! );   
+//! ```
 
 use core::num::NonZeroUsize;
 

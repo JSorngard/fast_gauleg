@@ -23,7 +23,9 @@
 //! assert_relative_eq!(
 //!     quad(-5.0, 2.0, |x| 0.125 * (63.0 * x.powf(5.0) - 70.0 * x.powf(3.0) + 15.0 * x), pts),
 //!     -305781.0 / 16.0,
-//!     epsilon = 1e-10, // Not as accurate outside [-1, 1]
+//!     // The epsilon is always chosen to be as small as possible
+//!     // while still passing the assertion.
+//!     epsilon = 1e-10,
 //! );
 //!```
 //! Integrate a trancendental function:
@@ -41,10 +43,9 @@
 //! ```
 //! # use approx::assert_relative_eq;
 //! use gauss_legendre_quadrature::GLQIntegrator;
-//! use std::f64::consts::PI;
 //! let integrator = GLQIntegrator::new(10.try_into().unwrap());
 //! assert_relative_eq!(
-//!     integrator.integrate(0.0, 2.0*PI, |theta| theta.sin() * theta.cos()),
+//!     integrator.integrate(0.0, 2.0 * std::f64::consts::PI, |theta| theta.sin() * theta.cos()),
 //!     0.0,
 //! );
 //! for n in 0..=19 {

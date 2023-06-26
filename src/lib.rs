@@ -1,3 +1,5 @@
+use core::num::NonZeroUsize;
+
 /// An object that can integrate `fn(f64) -> f64` functions.
 /// If instantiated with `n` points it can integrate polynomials of degree `2n - 1` exactly.
 /// It is less accurate the less polynomial-like the given function is, and the less it conforms to the degree-bound.
@@ -6,7 +8,7 @@
 /// ```
 /// # use gauss_legendre_quadrature::GLQIntegrator;
 /// # use approx::assert_relative_eq;
-/// let integrator = GLQIntegrator::new(3);
+/// let integrator = GLQIntegrator::new(3.try_into().unwrap());
 /// assert_relative_eq!(
 ///     integrator.integrate(0.0, 1.0, |x| x.powf(5.0)),
 ///     1.0 / 6.0,
@@ -22,13 +24,13 @@
 /// ```
 /// # use gauss_legendre_quadrature::GLQIntegrator;
 /// # use approx::assert_relative_eq;
-/// let mut integrator = GLQIntegrator::new(3);
+/// let mut integrator = GLQIntegrator::new(3.try_into().unwrap());
 /// assert_relative_eq!(
 ///     integrator.integrate(0.0, std::f64::consts::PI, |x| x.sin()),
 ///     2.0,
 ///     epsilon = 0.01 // Very bad accuracy
 /// );
-/// integrator.change_number_of_points(58);
+/// integrator.change_number_of_points(58.try_into().unwrap());
 /// assert_relative_eq!(
 ///     integrator.integrate(0.0, std::f64::consts::PI, |x| x.sin()),
 ///     2.0,
@@ -41,22 +43,22 @@ pub struct GLQIntegrator {
     // to increase the chances that both end up in the cache during
     // the same fetch from memory when the number of points is small.
     xs_and_ws: Vec<f64>,
-    points: usize,
+    points: NonZeroUsize,
 }
 
 impl GLQIntegrator {
     #[must_use = "function returns a new instance and does not modify the input values"]
     /// Creates a new integrator that integrates functions over the given domain.
-    pub fn new(points: usize) -> Self {
-        let mut xs_and_ws = vec![0.0; 2 * points];
-        let (xs, ws) = xs_and_ws.split_at_mut(points);
+    pub fn new(points: NonZeroUsize) -> Self {
+        let mut xs_and_ws = vec![0.0; 2 * points.get()];
+        let (xs, ws) = xs_and_ws.split_at_mut(points.into());
         gauleg(-1.0, 1.0, xs, ws);
         Self { xs_and_ws, points }
     }
 
     /// Integrates the given function over the given domain.
     pub fn integrate(&self, start: f64, end: f64, f: fn(f64) -> f64) -> f64 {
-        let (xs, ws) = self.xs_and_ws.split_at(self.points);
+        let (xs, ws) = self.xs_and_ws.split_at(self.points.into());
         xs.iter()
             .zip(ws.iter())
             .map(|(x, w)| w * f((end - start) * 0.5 * x + (start + end) * 0.5))
@@ -67,27 +69,27 @@ impl GLQIntegrator {
 
     /// Returns a slice of the integrators abscissas.
     pub fn abscissas(&self) -> &[f64] {
-        &self.xs_and_ws[..self.points]
+        &self.xs_and_ws[..self.points.get()]
     }
 
     /// Returns a slice of the integrators weights. The function values are multiplied by these
     /// numbers before they are summed.
     pub fn weights(&self) -> &[f64] {
-        &self.xs_and_ws[self.points..]
+        &self.xs_and_ws[self.points.get()..]
     }
 
     /// Returns the number of points in the integration domain
     #[must_use = "the method returns a value and does not modify `self` or its inputs"]
     #[inline(always)]
-    pub const fn points(&self) -> usize {
+    pub const fn points(&self) -> NonZeroUsize {
         self.points
     }
 
     /// Changes the number of points used during integration.
     /// If the number is not increased the old allocation is reused.
-    pub fn change_number_of_points(&mut self, points: usize) {
-        self.xs_and_ws.resize(2 * points, 0.0);
-        let (xs, ws) = self.xs_and_ws.split_at_mut(points);
+    pub fn change_number_of_points(&mut self, points: NonZeroUsize) {
+        self.xs_and_ws.resize(2 * points.get(), 0.0);
+        let (xs, ws) = self.xs_and_ws.split_at_mut(points.into());
         gauleg(-1.0, 1.0, xs, ws);
         self.points = points;
     }
@@ -136,20 +138,33 @@ pub fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
 
 /// Integrates the given function from `start` to `end`
 /// using Gauss-Legendre quadrature with `points` points.
+/// With `n` points it can integrate polynomials of degree `2n - 1` exactly.
+/// The result will be less accurate the less polynomial-like the function is,
+/// and the less it adheres to the degree bound.
 /// # Example
 /// ```
 /// # use gauss_legendre_quadrature::quad;
 /// # use approx::assert_relative_eq;
+/// // Integrate degree 2 and 3 polynomials with only 2 points:
+/// assert_relative_eq!(
+///     quad(0.0, 1.0, 2.try_into().unwrap(), |x| x * x),
+///     1.0 / 3.0,
+/// );
+/// assert_relative_eq!(
+///     quad(-1.0, 1.0, 2.try_into().unwrap(), |x| 0.5 * (3.0 * x * x - 1.0) * x),
+///     0.0
+/// );
+/// // Non-polynomials need more points to evaluate correctly:
 /// const END: f64 = 10.0;
 /// assert_relative_eq!(
-///     quad(0.0, END, 13, |x| x * (-x).exp()),
+///     quad(0.0, END, 13.try_into().unwrap(), |x| x * (-x).exp()),
 ///     (1.0 - (1.0 + END) * (-END).exp()),
 ///     epsilon = 1e-14,
 /// );
 /// ```
-pub fn quad(start: f64, end: f64, points: usize, f: fn(f64) -> f64) -> f64 {
-    let mut xs = vec![0.0; points];
-    let mut ws = vec![0.0; points];
+pub fn quad(start: f64, end: f64, points: NonZeroUsize, f: fn(f64) -> f64) -> f64 {
+    let mut xs = vec![0.0; points.into()];
+    let mut ws = vec![0.0; points.into()];
     gauleg(start, end, &mut xs, &mut ws);
     xs.into_iter()
         .zip(ws.into_iter())
@@ -180,7 +195,7 @@ mod test {
         // integrate func from X1 to X2.
         assert_relative_eq!(
             1.0 - (1.0 + X2) * (-X2).exp(),
-            quad(X1, X2, NUMBER_OF_POINTS, func),
+            quad(X1, X2, NUMBER_OF_POINTS.try_into().unwrap(), func),
             epsilon = 1e-14,
         );
     }
@@ -191,7 +206,7 @@ mod test {
         const X1: f64 = 0.0;
         const X2: f64 = 10.0;
 
-        let integrator = GLQIntegrator::new(NUMBER_OF_POINTS);
+        let integrator = GLQIntegrator::new(NUMBER_OF_POINTS.try_into().unwrap());
         assert_relative_eq!(
             integrator.integrate(X1, X2, |x| x * (-x).exp()),
             1.0 - (1.0 + X2) * (-X2).exp(),

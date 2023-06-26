@@ -147,22 +147,22 @@ pub fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
 /// # use approx::assert_relative_eq;
 /// // Integrate degree 2 and 3 polynomials with only 2 points:
 /// assert_relative_eq!(
-///     quad(0.0, 1.0, 2.try_into().unwrap(), |x| x * x),
+///     quad(0.0, 1.0, |x| x * x, 2.try_into().unwrap()),
 ///     1.0 / 3.0,
 /// );
 /// assert_relative_eq!(
-///     quad(-1.0, 1.0, 2.try_into().unwrap(), |x| 0.5 * (3.0 * x * x - 1.0) * x),
+///     quad(-1.0, 1.0, |x| 0.5 * (3.0 * x * x - 1.0) * x, 2.try_into().unwrap()),
 ///     0.0
 /// );
 /// // Non-polynomials need more points to evaluate correctly:
 /// const END: f64 = 10.0;
 /// assert_relative_eq!(
-///     quad(0.0, END, 13.try_into().unwrap(), |x| x * (-x).exp()),
+///     quad(0.0, END, |x| x * (-x).exp(), 13.try_into().unwrap()),
 ///     (1.0 - (1.0 + END) * (-END).exp()),
 ///     epsilon = 1e-14,
 /// );
 /// ```
-pub fn quad(start: f64, end: f64, points: NonZeroUsize, f: fn(f64) -> f64) -> f64 {
+pub fn quad(start: f64, end: f64, f: fn(f64) -> f64, points: NonZeroUsize) -> f64 {
     let mut xs = vec![0.0; points.into()];
     let mut ws = vec![0.0; points.into()];
     gauleg(start, end, &mut xs, &mut ws);
@@ -195,7 +195,7 @@ mod test {
         // integrate func from X1 to X2.
         assert_relative_eq!(
             1.0 - (1.0 + X2) * (-X2).exp(),
-            quad(X1, X2, NUMBER_OF_POINTS.try_into().unwrap(), func),
+            quad(X1, X2, func, NUMBER_OF_POINTS.try_into().unwrap()),
             epsilon = 1e-14,
         );
     }

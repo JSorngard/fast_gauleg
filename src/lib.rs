@@ -7,7 +7,7 @@ use core::num::NonZeroUsize;
 /// Integrate degree 5 polynomials with only 3 evaluation points:
 /// ```
 /// # use gauss_legendre_quadrature::GLQIntegrator;
-/// # use approx::assert_relative_eq;
+/// use approx::assert_relative_eq;
 /// let integrator = GLQIntegrator::new(3.try_into().unwrap());
 /// assert_relative_eq!(
 ///     integrator.integrate(0.0, 1.0, |x| x.powf(5.0)),
@@ -87,11 +87,11 @@ impl GLQIntegrator {
 
     /// Changes the number of points used during integration.
     /// If the number is not increased the old allocation is reused.
-    pub fn change_number_of_points(&mut self, points: NonZeroUsize) {
-        self.xs_and_ws.resize(2 * points.get(), 0.0);
-        let (xs, ws) = self.xs_and_ws.split_at_mut(points.into());
+    pub fn change_number_of_points(&mut self, new_points: NonZeroUsize) {
+        self.xs_and_ws.resize(2 * new_points.get(), 0.0);
+        let (xs, ws) = self.xs_and_ws.split_at_mut(new_points.into());
         gauleg(-1.0, 1.0, xs, ws);
-        self.points = points;
+        self.points = new_points;
     }
 }
 
@@ -137,21 +137,23 @@ pub fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
 }
 
 /// Integrates the given function from `start` to `end`
-/// using Gauss-Legendre quadrature with `points` points.
-/// With `n` points it can integrate polynomials of degree `2n - 1` exactly.
+/// using [Gauss-Legendre quadrature](https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_quadrature)
+/// with `points` points. With `n` points it can integrate polynomials of degree `2n - 1` exactly.
 /// The result will be less accurate the less polynomial-like the function is,
 /// and the less it adheres to the degree bound.
 /// # Example
 /// ```
 /// # use gauss_legendre_quadrature::quad;
-/// # use approx::assert_relative_eq;
+/// use approx::assert_relative_eq;
+/// use core::num::NonZeroUsize;
 /// // Integrate degree 2 and 3 polynomials with only 2 points:
+/// let pts = NonZeroUsize::new(2).unwrap();
 /// assert_relative_eq!(
-///     quad(0.0, 1.0, |x| x * x, 2.try_into().unwrap()),
+///     quad(0.0, 1.0, |x| x * x, pts),
 ///     1.0 / 3.0,
 /// );
 /// assert_relative_eq!(
-///     quad(-1.0, 1.0, |x| 0.5 * (3.0 * x * x - 1.0) * x, 2.try_into().unwrap()),
+///     quad(-1.0, 1.0, |x| 0.5 * (3.0 * x * x - 1.0) * x, pts),
 ///     0.0
 /// );
 /// // Non-polynomials need more points to evaluate correctly:

@@ -1,14 +1,6 @@
 use crate::data;
 use std::f64::consts::PI;
 
-fn try_usize_into_f64(x: usize) -> Result<f64, ()> {
-    let result = x as f64;
-    if result as usize != x {
-        return Err(());
-    }
-    Ok(result)
-}
-
 /// Returns the k:th zero of BesselJ[0, x]
 fn besselj0_zero(k: usize) -> f64 {
     if k > 20 {
@@ -64,7 +56,7 @@ impl QuadPair {
         let k = k.get();
         if n < 101 {
             Self::gl_pair_tabulated(n, k - 1)
-        } else if 2* k - 1 > n {
+        } else if 2 * k - 1 > n {
             let mut p = Self::gl_pair_s(n, n - k + 1);
             p.theta = PI - p.theta;
             p
@@ -85,9 +77,7 @@ impl QuadPair {
 
         let b = besselj1_squared(k);
 
-        let sf1t = (((((-1.290_529_962_742_805_1e-12 * x
-            + 2.407_246_858_643_301_3e-10)
-            * x
+        let sf1t = (((((-1.290_529_962_742_805_1e-12 * x + 2.407_246_858_643_301_3e-10) * x
             - 3.131_486_546_359_920_4e-8)
             * x
             + 2.755_731_689_620_612_4e-6)
@@ -97,9 +87,7 @@ impl QuadPair {
             + 4.166_666_666_651_934e-3)
             * x
             - 4.166_666_666_666_63e-2;
-        let sf2t = (((((2.206_394_217_818_71e-9 * x
-            - 7.530_367_713_737_693e-8)
-            * x
+        let sf2t = (((((2.206_394_217_818_71e-9 * x - 7.530_367_713_737_693e-8) * x
             + 1.619_692_594_538_362_7e-6)
             * x
             - 2.533_003_260_082_32e-5)
@@ -109,9 +97,7 @@ impl QuadPair {
             - 2.090_222_483_878_529e-3)
             * x
             + 8.159_722_217_729_322e-3;
-        let sf3t = (((((-2.970_582_253_755_262_3e-8 * x
-            + 5.558_453_302_237_962e-7)
-            * x
+        let sf3t = (((((-2.970_582_253_755_262_3e-8 * x + 5.558_453_302_237_962e-7) * x
             - 5.677_978_413_568_331e-6)
             * x
             + 4.184_981_003_295_046e-5)
@@ -122,8 +108,7 @@ impl QuadPair {
             * x
             - 4.160_121_656_202_043e-3;
 
-        let wsf1t = ((((((((-2.209_028_610_446_166_4e-14 * x
-            + 2.303_657_268_603_773_8e-12)
+        let wsf1t = ((((((((-2.209_028_610_446_166_4e-14 * x + 2.303_657_268_603_773_8e-12)
             * x
             - 1.752_577_007_354_238e-10)
             * x
@@ -140,9 +125,7 @@ impl QuadPair {
             - 3.055_555_555_555_53e-2)
             * x
             + 8.333_333_333_333_333e-2;
-        let wsf2t = (((((((3.631_174_121_526_548e-12 * x
-            + 7.676_435_450_698_932e-11)
-            * x
+        let wsf2t = (((((((3.631_174_121_526_548e-12 * x + 7.676_435_450_698_932e-11) * x
             - 7.129_128_572_336_422e-9)
             * x
             + 2.114_838_806_859_471_6e-7)
@@ -156,9 +139,7 @@ impl QuadPair {
             + 2.689_594_356_947_297e-3)
             * x
             - 1.111_111_111_112_149_2e-2;
-        let wsf3t = (((((((2.018_267_912_567_033e-9 * x
-            - 4.386_471_225_202_067e-8)
-            * x
+        let wsf3t = (((((((2.018_267_912_567_033e-9 * x - 4.386_471_225_202_067e-8) * x
             + 5.088_983_472_886_716e-7)
             * x
             - 3.979_333_165_191_352_5e-6)
@@ -186,35 +167,33 @@ impl QuadPair {
     }
 
     fn gl_pair_tabulated(l: usize, k: usize) -> Self {
+        use core::cmp::Ordering;
         use data::{CL, EVEN_THETA_ZEROS, EVEN_WEIGHTS, ODD_THETA_ZEROS, ODD_WEIGHTS};
         let (theta, weight) = if l % 2 == 1 {
             // originally l & 1
             let l2 = (l - 1) / 2;
-            if k == l2 {
-                (PI / 2.0, 2.0 / (CL[l] * CL[l]))
-            } else if k < l2 {
-                (
+            match k.cmp(&l2) {
+                Ordering::Equal => (PI / 2.0, 2.0 / (CL[l] * CL[l])),
+                Ordering::Less => (
                     ODD_THETA_ZEROS[l2 - 1][l2 - k - 1],
                     ODD_WEIGHTS[l2 - 1][l2 - k - 1],
-                )
-            } else {
-                (
+                ),
+                Ordering::Greater => (
                     PI - ODD_THETA_ZEROS[l2 - 1][k - l2 - 1],
                     ODD_WEIGHTS[l2 - 1][k - l2 - 1],
-                )
+                ),
             }
         } else {
             let l2 = l / 2;
-            if k < l2 {
-                (
+            match k.cmp(&l2) {
+                Ordering::Less => (
                     EVEN_THETA_ZEROS[l2 - 1][l2 - k - 1],
                     EVEN_WEIGHTS[l2 - 1][l2 - k - 1],
-                )
-            } else {
-                (
+                ),
+                Ordering::Equal | Ordering::Greater => (
                     PI - EVEN_THETA_ZEROS[l2 - 1][k - l2],
                     EVEN_WEIGHTS[l2 - 1][k - l2],
-                )
+                ),
             }
         };
         Self { theta, weight }

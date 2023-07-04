@@ -18,21 +18,18 @@
 //! HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 //! OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //!
-//! It was ported to Rust by Johanna Sörngård in 2023.
+//! It was ported to Rust and extended by Johanna Sörngård in 2023.
 
 use crate::data::{CL, EVEN_THETA_ZEROS, EVEN_WEIGHTS, J1, JZ, ODD_THETA_ZEROS, ODD_WEIGHTS};
 use core::cmp::Ordering;
 use std::f64::consts::PI;
 
-pub fn gauleg(x1: f64, x2: f64, xs: &mut [f64], ws: &mut [f64]) {
-    assert!(!xs.is_empty());
-    assert_eq!(xs.len(), ws.len());
-    let l = xs.len();
-    for (i, (x, w)) in xs.iter_mut().zip(ws.iter_mut()).enumerate() {
-        let k = i + 1;
-        let p = QuadPair::new(l, k);
-        *x = 0.5 * ((x2 - x1) * p.x() + (x1 + x2));
-        *w = p.weight * 0.5 * (x2 - x1);
+pub fn gauleg(points: &mut [QuadPair]) {
+    assert!(!points.is_empty());
+
+    let l = points.len();
+    for (i, point) in points.iter_mut().enumerate() {
+        *point = QuadPair::new(l, i + 1);
     }
 }
 
@@ -77,8 +74,8 @@ fn besselj1_squared(k: usize) -> f64 {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-struct QuadPair {
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
+pub struct QuadPair {
     theta: f64,
     weight: f64,
 }
@@ -98,8 +95,12 @@ impl QuadPair {
         }
     }
 
-    fn x(&self) -> f64 {
+    pub fn x(&self) -> f64 {
         self.theta.cos()
+    }
+
+    pub const fn w(&self) -> f64 {
+        self.weight
     }
 
     /// Compute a node-weight pair, with k limited to half the range

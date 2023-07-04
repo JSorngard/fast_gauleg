@@ -60,6 +60,8 @@
 //! ```
 
 use core::num::NonZeroUsize;
+mod data;
+mod fastgl;
 
 /// An object that can integrate `Fn(f64) -> f64` functions and closures.
 /// If instantiated with `n` points it can integrate polynomials of degree `2n - 1` exactly.

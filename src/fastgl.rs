@@ -60,7 +60,7 @@ fn besselj0_zero(k: usize) -> f64 {
     }
 }
 
-/// This function computes the square of BesselJ(1, BesselZero(0,k))
+/// This function computes the square of BesselJ(1, BesselZero(0, k))
 fn besselj1_squared(k: usize) -> f64 {
     if k > 21 {
         let x: f64 = 1.0 / (k as f64 - 0.25);

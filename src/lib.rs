@@ -24,7 +24,8 @@
 //! assert_relative_eq!(
 //!     quad(-5.0, 2.0, |x| 0.125 * (63.0 * x.powf(5.0) - 70.0 * x.powf(3.0) + 15.0 * x), pts),
 //!     -305781.0 / 16.0,
-//!     // The epsilon is always chosen to be as small as possible
+//!     // The exponent in the epsilon is always chosen
+//!     // to be as small as possible
 //!     // while still passing the assertion.
 //!     epsilon = 1e-10,
 //! );

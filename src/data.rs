@@ -46,8 +46,7 @@ pub static JZ: [f64; 20] = [
 ];
 
 pub static EVEN_THETA_ZERO_1: [f64; 1] = [9.553_166_181_245_093e-1];
-pub static EVEN_THETA_ZERO_2: [f64; 2] =
-    [1.223_899_586_470_372_6, 5.332_956_802_491_27e-1];
+pub static EVEN_THETA_ZERO_2: [f64; 2] = [1.223_899_586_470_372_6, 5.332_956_802_491_27e-1];
 pub static EVEN_THETA_ZERO_3: [f64; 3] = [
     1.329_852_612_388_110_3,
     8.483_666_264_874_876e-1,
@@ -1418,8 +1417,7 @@ pub static EVEN_THETA_ZERO_50: [f64; 50] = [
 ];
 
 pub static ODD_THETA_ZERO_1: [f64; 1] = [6.847_192_030_022_83e-1];
-pub static ODD_THETA_ZERO_2: [f64; 2] =
-    [1.002_176_803_643_121_6, 4.366_349_492_255_221_5e-1];
+pub static ODD_THETA_ZERO_2: [f64; 2] = [1.002_176_803_643_121_6, 4.366_349_492_255_221_5e-1];
 pub static ODD_THETA_ZERO_3: [f64; 3] = [
     1.152_892_953_722_227_4,
     7.354_466_143_229_52e-1,

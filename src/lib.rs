@@ -27,7 +27,7 @@
 //!     // The exponent in the epsilon is always chosen
 //!     // to be as small as possible
 //!     // while still passing the assertion.
-//!     epsilon = 1e-10,
+//!     epsilon = 1e-11,
 //! );
 //!```
 //! Integrate a trancendental function:
@@ -37,11 +37,10 @@
 //! assert_relative_eq!(
 //!     quad(0.0, 1.0, |x| (x + 1.0).ln().sin(), 10.try_into().unwrap()),
 //!     0.5 - f64::ln(2.0).cos() + f64::ln(2.0).sin(),
-//!     epsilon = 1e-14
 //! );   
 //! ```
 //! If many integrations need to be done the crate provides [`GLQIntegrator`], which allows
-//! some computation to be reused:
+//! the calculation of the quadrature weights and abscissas to be reused:
 //! ```
 //! # use approx::assert_relative_eq;
 //! use gauss_legendre_quadrature::GLQIntegrator;
@@ -49,12 +48,12 @@
 //! assert_relative_eq!(
 //!     integrator.integrate(0.0, 2.0 * std::f64::consts::PI, |theta| theta.sin() * theta.cos()),
 //!     0.0,
+//!     epsilon = 1e-15,
 //! );
 //! for n in 0..=19 {
 //!     assert_relative_eq!(
 //!         integrator.integrate(-1.0, 1.0, |x| x.powf(n.into())),
 //!         2.0 * f64::from(n % 2 == 0) / f64::from(n + 1),
-//!         epsilon = 1e-13,
 //!     );
 //! }
 //! ```
@@ -75,12 +74,10 @@ mod fastgl;
 /// assert_relative_eq!(
 ///     integrator.integrate(0.0, 1.0, |x| x.powf(5.0)),
 ///     1.0 / 6.0,
-///     epsilon = 1e-15,
 /// );
 /// assert_relative_eq!(
 ///     integrator.integrate(-1.0, 1.0, |x| x.powf(5.0) - 2.0 * x.powf(4.0) + 1.0),
 ///     6.0 / 5.0,
-///     epsilon = 1e-14, // Slightly less accurate
 /// );
 /// ```
 /// Non-polynomial functions need more points to evaluate correctly
@@ -91,7 +88,7 @@ mod fastgl;
 /// assert_relative_eq!(
 ///     integrator.integrate(0.0, std::f64::consts::PI, |x| x.sin()),
 ///     2.0,
-///     epsilon = 0.01 // Very bad accuracy
+///     epsilon = 1e-2 // Very bad accuracy
 /// );
 /// integrator.change_number_of_points(58.try_into().unwrap());
 /// assert_relative_eq!(
@@ -115,7 +112,7 @@ impl GLQIntegrator {
     pub fn new(points: NonZeroUsize) -> Self {
         let mut xs_and_ws = vec![0.0; 2 * points.get()];
         let (xs, ws) = xs_and_ws.split_at_mut(points.into());
-        gauleg(-1.0, 1.0, xs, ws);
+        fastgl::gauleg(-1.0, 1.0, xs, ws);
         Self { xs_and_ws, points }
     }
 
@@ -163,7 +160,7 @@ impl GLQIntegrator {
 /// in the domain [x1, x2] using Gauss-Legendre quadrature.
 /// # Panic
 /// Panics if the lengths of the slices are different
-pub fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
+fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
     // This function is ported Fortran code, and is not very ideomatic.
     // The original code can be found in the book Numerical Recipes: http://numerical.recipes/
     assert_eq!(x.len(), w.len());
@@ -225,13 +222,12 @@ pub fn gauleg(x1: f64, x2: f64, x: &mut [f64], w: &mut [f64]) {
 /// assert_relative_eq!(
 ///     quad(0.0, END, |x| x * (-x).exp(), 13.try_into().unwrap()),
 ///     (1.0 - (1.0 + END) * (-END).exp()),
-///     epsilon = 1e-14,
 /// );
 /// ```
 pub fn quad<F: Fn(f64) -> f64>(start: f64, end: f64, f: F, points: NonZeroUsize) -> f64 {
     let mut xs = vec![0.0; points.into()];
     let mut ws = vec![0.0; points.into()];
-    gauleg(start, end, &mut xs, &mut ws);
+    fastgl::gauleg(start, end, &mut xs, &mut ws);
     xs.into_iter()
         .zip(ws.into_iter())
         .map(|(x, w)| w * f(x))

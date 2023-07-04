@@ -6,22 +6,35 @@
 //!    to be published in the SIAM Journal of Scientific Computing.
 //!
 //! The main features of this software are:
-//! - Speed: due to the simple formulas and the O(1) complexity computation of individual Gauss-Legendre 
+//! - Speed: due to the simple formulas and the O(1) complexity computation of individual Gauss-Legendre
 //!   quadrature nodes and weights. This makes it compatible with parallel computing paradigms.
 //! - Accuracy: the error on the nodes and weights is within a few ulps (see the paper for details).
 //!
 //! Disclaimer:
-//! THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-//! WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR 
-//! CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+//! THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+//! WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR
+//! CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
 //! BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-//! HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+//! HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 //! OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//! 
+//!
 //! It was ported to Rust by Johanna Sörngård in 2023.
 
-use crate::data;
+use crate::data::{CL, EVEN_THETA_ZEROS, EVEN_WEIGHTS, J1, JZ, ODD_THETA_ZEROS, ODD_WEIGHTS};
+use core::cmp::Ordering;
 use std::f64::consts::PI;
+
+pub fn gauleg(x1: f64, x2: f64, xs: &mut [f64], ws: &mut [f64]) {
+    assert!(!xs.is_empty());
+    assert_eq!(xs.len(), ws.len());
+    let l = xs.len();
+    for (i, (x, w)) in xs.iter_mut().zip(ws.iter_mut()).enumerate() {
+        let k = i + 1;
+        let p = QuadPair::new(l, k);
+        *x = 0.5 * ((x2 - x1) * p.x() + (x1 + x2));
+        *w = p.weight * 0.5 * (x2 - x1);
+    }
+}
 
 /// This function computes the kth zero of the BesselJ(0,x)
 fn besselj0_zero(k: usize) -> f64 {
@@ -40,7 +53,7 @@ fn besselj0_zero(k: usize) -> f64 {
                                         + r2 * (-8.493_535_802_991_488e5
                                             + 5.092_254_624_022_268e7 * r2))))))))
     } else {
-        data::JZ[k - 1]
+        JZ[k - 1]
     }
 }
 
@@ -60,7 +73,7 @@ fn besselj1_squared(k: usize) -> f64 {
                                         + x2 * (-2.668_373_937_023_237_7e-2
                                             + 0.185_395_398_206_345_62 * x2))))))))
     } else {
-        data::J1[k - 1]
+        J1[k - 1]
     }
 }
 
@@ -70,12 +83,10 @@ struct QuadPair {
     weight: f64,
 }
 
-use core::num::NonZeroUsize;
 impl QuadPair {
-    fn new(n: NonZeroUsize, k: NonZeroUsize) -> Self {
+    fn new(n: usize, k: usize) -> Self {
+        assert!(k > 0);
         assert!(n >= k);
-        let n = n.get();
-        let k = k.get();
         if n < 101 {
             Self::gl_pair_tabulated(n, k - 1)
         } else if 2 * k - 1 > n {
@@ -197,8 +208,6 @@ impl QuadPair {
 
     /// Returns tabulated theta and weight values: valid for l <= 100
     fn gl_pair_tabulated(l: usize, k: usize) -> Self {
-        use core::cmp::Ordering;
-        use data::{CL, EVEN_THETA_ZEROS, EVEN_WEIGHTS, ODD_THETA_ZEROS, ODD_WEIGHTS};
         // Odd Legendre degree
         let (theta, weight) = if l % 2 == 1 {
             // originally l & 1

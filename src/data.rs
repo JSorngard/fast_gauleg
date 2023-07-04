@@ -45,6 +45,9 @@ pub static JZ: [f64; 20] = [
     62.048_469_190_227_166,
 ];
 
+// Tabulated nodes and weights
+// The required theta values for the Legendre nodes for l <= 100
+
 pub static EVEN_THETA_ZERO_1: [f64; 1] = [9.553_166_181_245_093e-1];
 pub static EVEN_THETA_ZERO_2: [f64; 2] = [1.223_899_586_470_372_6, 5.332_956_802_491_27e-1];
 pub static EVEN_THETA_ZERO_3: [f64; 3] = [
@@ -2840,6 +2843,8 @@ pub static EVEN_THETA_ZEROS: [&[f64]; 50] = [
     &EVEN_THETA_ZERO_50,
 ];
 
+// The weights of these nodes
+
 pub static EVEN_W_1: [f64; 1] = [1.0];
 pub static EVEN_W_2: [f64; 2] = [6.521_451_548_625_461e-1, 3.478_548_451_374_538_5e-1];
 pub static EVEN_W_3: [f64; 3] = [
@@ -5548,6 +5553,8 @@ pub static EVEN_WEIGHTS: [&[f64]; 50] = [
     &EVEN_W_41, &EVEN_W_42, &EVEN_W_43, &EVEN_W_44, &EVEN_W_45, &EVEN_W_46, &EVEN_W_47, &EVEN_W_48,
     &EVEN_W_49, &EVEN_W_50,
 ];
+
+// The factor in front of the direct product representation
 
 pub static CL: [f64; 101] = [
     1.0,

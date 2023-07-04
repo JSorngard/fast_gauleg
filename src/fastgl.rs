@@ -1,7 +1,29 @@
+//! *******************************************
+//!    Copyright (C) 2014 by Ignace Bogaert   *
+//! *******************************************
+//! This software package is based on the paper
+//!    I. Bogaert, "Iteration-Free Computation of Gauss-Legendre Quadrature Nodes and Weights",
+//!    to be published in the SIAM Journal of Scientific Computing.
+//!
+//! The main features of this software are:
+//! - Speed: due to the simple formulas and the O(1) complexity computation of individual Gauss-Legendre 
+//!   quadrature nodes and weights. This makes it compatible with parallel computing paradigms.
+//! - Accuracy: the error on the nodes and weights is within a few ulps (see the paper for details).
+//!
+//! Disclaimer:
+//! THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+//! WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR 
+//! CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+//! BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+//! HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+//! OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//! 
+//! It was ported to Rust by Johanna Sörngård in 2023.
+
 use crate::data;
 use std::f64::consts::PI;
 
-/// Returns the k:th zero of BesselJ[0, x]
+/// This function computes the kth zero of the BesselJ(0,x)
 fn besselj0_zero(k: usize) -> f64 {
     if k > 20 {
         let z: f64 = PI * (k as f64 - 0.25);
@@ -22,7 +44,7 @@ fn besselj0_zero(k: usize) -> f64 {
     }
 }
 
-/// Returns BesselJ[1, BesselZero[0, k]]^2
+/// This function computes the square of BesselJ(1, BesselZero(0,k))
 fn besselj1_squared(k: usize) -> f64 {
     if k > 21 {
         let x: f64 = 1.0 / (k as f64 - 0.25);
@@ -50,7 +72,7 @@ struct QuadPair {
 
 use core::num::NonZeroUsize;
 impl QuadPair {
-    pub fn new(n: NonZeroUsize, k: NonZeroUsize) -> Self {
+    fn new(n: NonZeroUsize, k: NonZeroUsize) -> Self {
         assert!(n >= k);
         let n = n.get();
         let k = k.get();
@@ -69,14 +91,18 @@ impl QuadPair {
         self.theta.cos()
     }
 
+    /// Compute a node-weight pair, with k limited to half the range
     fn gl_pair_s(n: usize, k: usize) -> Self {
+        // First get the Bessel zero
         let w: f64 = 1.0 / (n as f64 + 0.5);
         let nu = besselj0_zero(k);
         let theta = w * nu;
         let x = theta * theta;
 
+        // Get the asymptotic BesselJ(1, nu) squared
         let b = besselj1_squared(k);
 
+        // Get the Chebyshev interpolants for the nodes...
         let sf1t = (((((-1.290_529_962_742_805_1e-12 * x + 2.407_246_858_643_301_3e-10) * x
             - 3.131_486_546_359_920_4e-8)
             * x
@@ -108,6 +134,7 @@ impl QuadPair {
             * x
             - 4.160_121_656_202_043e-3;
 
+        // ...and for the weights
         let wsf1t = ((((((((-2.209_028_610_446_166_4e-14 * x + 2.303_657_268_603_773_8e-12)
             * x
             - 1.752_577_007_354_238e-10)
@@ -154,11 +181,13 @@ impl QuadPair {
             * x
             + 6.569_664_899_264_848e-3;
 
+        // Then refine with the paper expansions
         let nu_o_sin = nu / theta.sin();
         let b_nu_o_sin = b * nu_o_sin;
         let w_inv_sinc = w * w * nu_o_sin;
         let wis2 = w_inv_sinc * w_inv_sinc;
 
+        // Finally compute the node and the weight
         let theta = w * (nu + theta + w_inv_sinc * (sf1t + wis2 * (sf2t + wis2 * sf3t)));
         let deno = b_nu_o_sin + b_nu_o_sin * wis2 * (wsf1t + wis2 * (wsf2t + wis2 * wsf3t));
         let weight = 2.0 * w / deno;
@@ -166,9 +195,11 @@ impl QuadPair {
         Self { theta, weight }
     }
 
+    /// Returns tabulated theta and weight values: valid for l <= 100
     fn gl_pair_tabulated(l: usize, k: usize) -> Self {
         use core::cmp::Ordering;
         use data::{CL, EVEN_THETA_ZEROS, EVEN_WEIGHTS, ODD_THETA_ZEROS, ODD_WEIGHTS};
+        // Odd Legendre degree
         let (theta, weight) = if l % 2 == 1 {
             // originally l & 1
             let l2 = (l - 1) / 2;
@@ -183,6 +214,7 @@ impl QuadPair {
                     ODD_WEIGHTS[l2 - 1][k - l2 - 1],
                 ),
             }
+        // Even Legendre degree
         } else {
             let l2 = l / 2;
             match k.cmp(&l2) {

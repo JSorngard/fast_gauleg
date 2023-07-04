@@ -21,10 +21,16 @@
 //! It was ported to Rust and extended by Johanna Sörngård in 2023.
 
 use crate::data::{CL, EVEN_THETA_ZEROS, EVEN_WEIGHTS, J1, JZ, ODD_THETA_ZEROS, ODD_WEIGHTS};
-use core::cmp::Ordering;
+use core::{cmp::Ordering, num::NonZeroUsize};
 use std::f64::consts::PI;
 
-pub fn gauleg(points: &mut [QuadPair]) {
+pub fn new_gauleg(points: NonZeroUsize) -> Vec<QuadPair> {
+    (1..=points.get())
+        .map(|k| QuadPair::new(points.into(), k))
+        .collect()
+}
+
+pub fn modify_gauleg(points: &mut [QuadPair]) {
     assert!(!points.is_empty());
 
     let l = points.len();

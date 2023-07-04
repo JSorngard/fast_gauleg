@@ -3,6 +3,9 @@
 //! A quadrature using `n` points can exactly integrate a polynomial of degree `2n - 1` in the interval `[-1, 1]`.
 //! Non-polynomials will need more evaluation points, and the answer will be less accurate
 //! the less polynomial-like the given function is and the more it violates the degree bound.
+//! 
+//! The weights and abscissas used during integration are computed using the method developed by
+//! [Ignace Bogaert](https://www.researchgate.net/publication/262672564_Iteration-Free_Computation_of_Gauss-Legendre_Quadrature_Nodes_and_Weights).
 //! # Examples
 //! Integrate a degree five polynomial while only evaluating it at three points:
 //! ```
@@ -39,6 +42,21 @@
 //!     0.5 - f64::ln(2.0).cos() + f64::ln(2.0).sin(),
 //! );   
 //! ```
+//! Divergences can be hard to integrate. Integration with many points can compensate for this, and is still fast
+//! ```
+//! # use approx::assert_relative_eq;
+//! # use gauss_legendre_quadrature::quad;
+//! assert_relative_eq!(
+//!     quad(0.0, 1.0, |x| x.ln(), 10.try_into().unwrap()),
+//!     -1.0,
+//!     epsilon = 1e-2,
+//! );
+//! assert_relative_eq!(
+//!     quad(0.0, 1.0, |x| x.ln(), 1_000_000.try_into().unwrap()),
+//!     -1.0,
+//!     epsilon = 1e-6,
+//! );
+//! ```
 //! If many integrations need to be done the crate provides [`GLQIntegrator`], which allows
 //! the calculation of the quadrature weights and abscissas to be reused:
 //! ```
@@ -61,7 +79,7 @@
 use core::num::NonZeroUsize;
 mod data;
 mod fastgl;
-use fastgl::{gauleg, QuadPair};
+use fastgl::{modify_gauleg, new_gauleg, QuadPair};
 
 /// An object that can integrate `Fn(f64) -> f64` functions and closures.
 /// If instantiated with `n` points it can integrate polynomials of degree `2n - 1` exactly.
@@ -108,8 +126,7 @@ impl GLQIntegrator {
     #[must_use = "function returns a new instance and does not modify the input values"]
     /// Creates a new integrator that integrates functions over the given domain.
     pub fn new(points: NonZeroUsize) -> Self {
-        let mut xs_and_ws = vec![QuadPair::default(); points.get()];
-        gauleg(&mut xs_and_ws);
+        let xs_and_ws = new_gauleg(points);
         Self { xs_and_ws, points }
     }
 
@@ -134,7 +151,7 @@ impl GLQIntegrator {
     /// If the number is not increased the old allocation is reused.
     pub fn change_number_of_points(&mut self, new_points: NonZeroUsize) {
         self.xs_and_ws.resize(new_points.get(), QuadPair::default());
-        gauleg(&mut self.xs_and_ws);
+        modify_gauleg(&mut self.xs_and_ws);
         self.points = new_points;
     }
 }
@@ -167,8 +184,7 @@ impl GLQIntegrator {
 /// );
 /// ```
 pub fn quad<F: Fn(f64) -> f64>(start: f64, end: f64, f: F, points: NonZeroUsize) -> f64 {
-    let mut xs_and_ws = vec![QuadPair::default(); points.get()];
-    gauleg(&mut xs_and_ws);
+    let xs_and_ws = new_gauleg(points);
     xs_and_ws
         .into_iter()
         .map(|p| 0.5 * (end - start) * p.w() * f(0.5 * (end - start) * p.x() + 0.5 * (start + end)))
@@ -203,6 +219,15 @@ mod test {
             integrator.integrate(X1, X3, |x| x.cos()),
             X3.sin(),
             epsilon = 1e-12
+        );
+    }
+
+    #[test]
+    fn check_large_integral() {
+        assert_relative_eq!(
+            quad(0.0, 1.0, |x| x.ln(), 1_000_000.try_into().unwrap()),
+            -1.0,
+            epsilon = 1e-6
         );
     }
 }

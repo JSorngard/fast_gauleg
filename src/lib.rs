@@ -3,7 +3,7 @@
 //! A quadrature using `n` points can exactly integrate a polynomial of degree `2n - 1` in the interval `[-1, 1]`.
 //! Non-polynomials will need more evaluation points, and the answer will be less accurate
 //! the less polynomial-like the given function is and the more it violates the degree bound.
-//! 
+//!
 //! The weights and abscissas used during integration are computed using the method developed by
 //! [Ignace Bogaert](https://www.researchgate.net/publication/262672564_Iteration-Free_Computation_of_Gauss-Legendre_Quadrature_Nodes_and_Weights).
 //! # Examples
@@ -54,7 +54,7 @@
 //! assert_relative_eq!(
 //!     quad(0.0, 1.0, |x| x.ln(), 1_000_000.try_into().unwrap()),
 //!     -1.0,
-//!     epsilon = 1e-6,
+//!     epsilon = 1e-12,
 //! );
 //! ```
 //! If many integrations need to be done the crate provides [`GLQIntegrator`], which allows

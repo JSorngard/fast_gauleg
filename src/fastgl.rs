@@ -22,6 +22,8 @@
 
 use crate::data::{CL, EVEN_THETA_ZEROS, EVEN_WEIGHTS, J1, JZ, ODD_THETA_ZEROS, ODD_WEIGHTS};
 use core::{cmp::Ordering, num::NonZeroUsize};
+#[cfg(feature = "rayon")]
+use rayon::prelude::*;
 use std::f64::consts::PI;
 
 /// Generate a [`Vec`] of [`QuadPair`]s for manual integration.
@@ -39,6 +41,26 @@ pub fn write_gauleg(points: &mut [QuadPair]) {
     for (i, point) in points.iter_mut().enumerate() {
         *point = QuadPair::new(l, i + 1);
     }
+}
+
+#[cfg(feature = "rayon")]
+/// Same as [`new_gauleg`] but parallel.
+#[must_use = "the function returns a new value and does not modify the input"]
+pub fn par_new_gauleg(points: NonZeroUsize) -> Vec<QuadPair> {
+    (1..=points.get())
+        .into_par_iter()
+        .map(|k| QuadPair::new(points.into(), k))
+        .collect()
+}
+
+#[cfg(feature = "rayon")]
+/// Same as [`write_gauleg`] but parallel.
+pub fn par_write_gauleg(points: &mut [QuadPair]) {
+    let l = points.len();
+    points
+        .par_iter_mut()
+        .enumerate()
+        .for_each(|(i, point)| *point = QuadPair::new(l, i + 1));
 }
 
 /// This function computes the kth zero of the BesselJ(0,x)

@@ -76,11 +76,18 @@
 //! }
 //! ```
 
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 use core::num::NonZeroUsize;
+#[cfg(feature = "rayon")]
+use rayon::prelude::*;
 #[rustfmt::skip]
 mod data;
 mod fastgl;
-pub use fastgl::{new_gauleg, write_gauleg, QuadPair};
+pub use fastgl::QuadPair;
+use fastgl::{new_gauleg, write_gauleg};
+#[cfg(feature = "rayon")]
+use fastgl::{par_new_gauleg, par_write_gauleg};
 
 /// An object that can integrate `Fn(f64) -> f64` functions and closures.
 /// If instantiated with `n` points it can integrate polynomials of degree `2n - 1` exactly.
@@ -124,17 +131,46 @@ pub struct GLQIntegrator {
 }
 
 impl GLQIntegrator {
-    #[must_use = "function returns a new instance and does not modify the input values"]
     /// Creates a new integrator that integrates functions over the given domain.
+    #[must_use = "associated method returns a new instance and does not modify the input values"]
     pub fn new(points: NonZeroUsize) -> Self {
         let xs_and_ws = new_gauleg(points);
         Self { xs_and_ws, points }
     }
 
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "rayon")))]
+    /// Same as [`new`](GLQIntegrator::new) but parallel.
+    #[must_use = "associated method returns a new instance and does not modify the input values"]
+    pub fn par_new(points: NonZeroUsize) -> Self {
+        let xs_and_ws = par_new_gauleg(points);
+        Self { xs_and_ws, points }
+    }
+
     /// Integrates the given function over the given domain.
-    pub fn integrate<F: Fn(f64) -> f64>(&self, start: f64, end: f64, f: F) -> f64 {
+    #[must_use = "the method returns a new value and does not modify `self` or the inputs"]
+    pub fn integrate<F>(&self, start: f64, end: f64, f: F) -> f64
+    where
+        F: Fn(f64) -> f64,
+    {
         self.xs_and_ws
             .iter()
+            .map(|p| p.weight() * f((end - start) * 0.5 * p.position() + (start + end) * 0.5))
+            .sum::<f64>()
+            * (end - start)
+            * 0.5
+    }
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "rayon")))]
+    /// Same as [`integrate`](GLQIntegrator::integrate) but parallel.
+    #[must_use = "the method returns a new value and does not modify `self` or the inputs"]
+    pub fn par_integrate<F>(&self, start: f64, end: f64, f: F) -> f64
+    where
+        F: Fn(f64) -> f64 + Send + Sync,
+    {
+        self.xs_and_ws
+            .par_iter()
             .map(|p| p.weight() * f((end - start) * 0.5 * p.position() + (start + end) * 0.5))
             .sum::<f64>()
             * (end - start)
@@ -151,8 +187,19 @@ impl GLQIntegrator {
     /// Changes the number of points used during integration.
     /// If the number is not increased the old allocation is reused.
     pub fn change_number_of_points(&mut self, new_points: NonZeroUsize) {
-        self.xs_and_ws.resize(new_points.get(), QuadPair::default());
+        self.xs_and_ws
+            .resize(new_points.into(), QuadPair::default());
         write_gauleg(&mut self.xs_and_ws);
+        self.points = new_points;
+    }
+
+    #[cfg(feature = "rayon")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "rayon")))]
+    /// Same as [`change_number_of_points`](GLQIntegrator::change_number_of_points) but parallel.
+    pub fn par_change_number_of_points(&mut self, new_points: NonZeroUsize) {
+        self.xs_and_ws
+            .resize(new_points.into(), QuadPair::default());
+        par_write_gauleg(&mut self.xs_and_ws);
         self.points = new_points;
     }
 }
@@ -184,10 +231,33 @@ impl GLQIntegrator {
 ///     (1.0 - (1.0 + END) * (-END).exp()),
 /// );
 /// ```
-pub fn quad<F: Fn(f64) -> f64>(start: f64, end: f64, f: F, points: NonZeroUsize) -> f64 {
+#[must_use = "the function returns a value and does not modify its inputs"]
+pub fn quad<F>(start: f64, end: f64, f: F, points: NonZeroUsize) -> f64
+where
+    F: Fn(f64) -> f64,
+{
     let xs_and_ws = new_gauleg(points);
     xs_and_ws
         .into_iter()
+        .map(|p| {
+            0.5 * (end - start)
+                * p.weight()
+                * f(0.5 * (end - start) * p.position() + 0.5 * (start + end))
+        })
+        .sum()
+}
+
+#[cfg(feature = "rayon")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rayon")))]
+/// Same as [`quad`] but parallel.
+#[must_use = "the function returns a value and does not modify its inputs"]
+pub fn par_quad<F>(start: f64, end: f64, f: F, points: NonZeroUsize) -> f64
+where
+    F: Fn(f64) -> f64 + Send + Sync,
+{
+    let xs_and_ws = par_new_gauleg(points);
+    xs_and_ws
+        .into_par_iter()
         .map(|p| {
             0.5 * (end - start)
                 * p.weight()
@@ -233,6 +303,50 @@ mod test {
             quad(0.0, 1.0, |x| x.ln(), 1_000_000.try_into().unwrap()),
             -1.0,
             epsilon = 1e-6
+        );
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn test_parallel_quad() {
+        use super::par_quad;
+        assert_relative_eq!(
+            par_quad(0.0, 1.0, |x| x * x, 3.try_into().unwrap()),
+            1.0 / 3.0,
+        );
+        assert_relative_eq!(
+            par_quad(
+                -1.0,
+                1.0,
+                |x| 0.5 * (3.0 * x * x - 1.0) * x,
+                3.try_into().unwrap()
+            ),
+            0.0
+        );
+        const END: f64 = 10.0;
+        assert_relative_eq!(
+            par_quad(0.0, END, |x| x * (-x).exp(), 13.try_into().unwrap()),
+            (1.0 - (1.0 + END) * (-END).exp()),
+        );
+    }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn test_parallel_glqintegrator() {
+        let mut integrator = GLQIntegrator::par_new(3.try_into().unwrap());
+        assert_relative_eq!(
+            integrator.par_integrate(0.0, 1.0, |x| x.powf(5.0)),
+            1.0 / 6.0,
+        );
+        assert_relative_eq!(
+            integrator.par_integrate(-1.0, 1.0, |x| x.powf(5.0) - 2.0 * x.powf(4.0) + 1.0),
+            6.0 / 5.0,
+        );
+        integrator.par_change_number_of_points(58.try_into().unwrap());
+        assert_relative_eq!(
+            integrator.par_integrate(0.0, std::f64::consts::PI, |x| x.sin()),
+            2.0,
+            epsilon = 1e-15
         );
     }
 }

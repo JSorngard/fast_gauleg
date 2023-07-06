@@ -4,7 +4,7 @@
 //! Non-polynomials will need more evaluation points, and the answer will be less accurate
 //! the less polynomial-like the given function is and the more it violates the degree bound.
 //!
-//! The weights and abscissas used during integration are computed using the method developed by
+//! The nodes and weights used during integration are computed using the method developed by
 //! [Ignace Bogaert](https://www.researchgate.net/publication/262672564_Iteration-Free_Computation_of_Gauss-Legendre_Quadrature_Nodes_and_Weights).
 //! # Examples
 //! Integrate a degree five polynomial while only evaluating it at three points:
@@ -57,8 +57,8 @@
 //!     epsilon = 1e-12,
 //! );
 //! ```
-//! If many integrations need to be done the crate provides [`GLQIntegrator`], which allows
-//! the calculation of the quadrature weights and abscissas to be reused:
+//! If many integrations need to be done the crate provides [`GLQIntegrator`], which reuses
+//! the calculation of the quadrature nodes and weights:
 //! ```
 //! # use approx::assert_relative_eq;
 //! use gauss_legendre_quadrature::GLQIntegrator;

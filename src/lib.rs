@@ -80,7 +80,7 @@ use core::num::NonZeroUsize;
 #[rustfmt::skip]
 mod data;
 mod fastgl;
-use fastgl::{modify_gauleg, new_gauleg, QuadPair};
+pub use fastgl::{new_gauleg, write_gauleg, QuadPair};
 
 /// An object that can integrate `Fn(f64) -> f64` functions and closures.
 /// If instantiated with `n` points it can integrate polynomials of degree `2n - 1` exactly.
@@ -135,7 +135,7 @@ impl GLQIntegrator {
     pub fn integrate<F: Fn(f64) -> f64>(&self, start: f64, end: f64, f: F) -> f64 {
         self.xs_and_ws
             .iter()
-            .map(|p| p.w() * f((end - start) * 0.5 * p.x() + (start + end) * 0.5))
+            .map(|p| p.weight() * f((end - start) * 0.5 * p.position() + (start + end) * 0.5))
             .sum::<f64>()
             * (end - start)
             * 0.5
@@ -152,7 +152,7 @@ impl GLQIntegrator {
     /// If the number is not increased the old allocation is reused.
     pub fn change_number_of_points(&mut self, new_points: NonZeroUsize) {
         self.xs_and_ws.resize(new_points.get(), QuadPair::default());
-        modify_gauleg(&mut self.xs_and_ws);
+        write_gauleg(&mut self.xs_and_ws);
         self.points = new_points;
     }
 }
@@ -188,7 +188,11 @@ pub fn quad<F: Fn(f64) -> f64>(start: f64, end: f64, f: F, points: NonZeroUsize)
     let xs_and_ws = new_gauleg(points);
     xs_and_ws
         .into_iter()
-        .map(|p| 0.5 * (end - start) * p.w() * f(0.5 * (end - start) * p.x() + 0.5 * (start + end)))
+        .map(|p| {
+            0.5 * (end - start)
+                * p.weight()
+                * f(0.5 * (end - start) * p.position() + 0.5 * (start + end))
+        })
         .sum()
 }
 

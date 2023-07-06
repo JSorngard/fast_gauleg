@@ -24,15 +24,17 @@ use crate::data::{CL, EVEN_THETA_ZEROS, EVEN_WEIGHTS, J1, JZ, ODD_THETA_ZEROS, O
 use core::{cmp::Ordering, num::NonZeroUsize};
 use std::f64::consts::PI;
 
+/// Generate a [`Vec`] of [`QuadPair`]s for manual integration.
+#[must_use = "the function returns a new value and does not modify the input"]
 pub fn new_gauleg(points: NonZeroUsize) -> Vec<QuadPair> {
     (1..=points.get())
         .map(|k| QuadPair::new(points.into(), k))
         .collect()
 }
 
-pub fn modify_gauleg(points: &mut [QuadPair]) {
-    assert!(!points.is_empty());
-
+/// Writes [`QuadPair`]s to an already allocated slice for manual integration.
+/// Does nothing if the slice is empty.
+pub fn write_gauleg(points: &mut [QuadPair]) {
     let l = points.len();
     for (i, point) in points.iter_mut().enumerate() {
         *point = QuadPair::new(l, i + 1);
@@ -41,6 +43,7 @@ pub fn modify_gauleg(points: &mut [QuadPair]) {
 
 /// This function computes the kth zero of the BesselJ(0,x)
 #[rustfmt::skip]
+#[must_use]
 fn besselj0_zero(k: usize) -> f64 {
     if k > 20 {
         let z: f64 = PI * (k as f64 - 0.25);
@@ -54,6 +57,7 @@ fn besselj0_zero(k: usize) -> f64 {
 
 /// This function computes the square of BesselJ(1, BesselZero(0, k))
 #[rustfmt::skip]
+#[must_use]
 fn besselj1_squared(k: usize) -> f64 {
     if k > 21 {
         let x: f64 = 1.0 / (k as f64 - 0.25);
@@ -64,13 +68,46 @@ fn besselj1_squared(k: usize) -> f64 {
     }
 }
 
+/// A node-weight pair used for manual integration.
+/// # Example
+/// Integrate `f(x) = e^x` in the interval `[-1, 1]`.
+/// ```
+/// # use gl_quadrature::QuadPair;
+/// let n = 9;
+/// assert_eq!(
+///     (1..=n).map(|k| {
+///         let p = QuadPair::new(n, k);
+///         p.weight() * p.position().exp()
+///     }).sum::<f64>(),
+///     1.0_f64.exp() - (-1.0_f64).exp(),
+/// )
+/// ```
+/// Integrate `f(x) = x^2 - x - 1` in the interval `[0, 1]`.
+/// ```
+/// # use gl_quadrature::QuadPair;
+/// let n = 3;
+/// let f = |x| x * x - x - 1.0;
+/// assert_eq!(
+///     (1..=n).map(|k| {
+///         let p = QuadPair::new(n, k);
+///         0.5 * p.weight() * f(0.5 * p.position() + 0.5)
+///     }).sum::<f64>(),
+///     -7.0 / 6.0,
+/// );
+/// ```
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct QuadPair {
+    position: f64,
+    weight: f64,
+}
+
+struct QuadThetaWeightPair {
     theta: f64,
     weight: f64,
 }
 
-impl QuadPair {
+impl QuadThetaWeightPair {
+    #[must_use]
     fn new(n: usize, k: usize) -> Self {
         assert!(k > 0);
         assert!(n >= k);
@@ -85,16 +122,9 @@ impl QuadPair {
         }
     }
 
-    pub fn x(&self) -> f64 {
-        self.theta.cos()
-    }
-
-    pub const fn w(&self) -> f64 {
-        self.weight
-    }
-
     /// Compute a node-weight pair, with k limited to half the range
     #[rustfmt::skip]
+    #[must_use]
     fn gl_pair_s(n: usize, k: usize) -> Self {
         // First get the Bessel zero
         let w: f64 = 1.0 / (n as f64 + 0.5);
@@ -130,6 +160,7 @@ impl QuadPair {
     }
 
     /// Returns tabulated theta and weight values: valid for l <= 100
+    #[must_use]
     fn gl_pair_tabulated(l: usize, k: usize) -> Self {
         // Odd Legendre degree
         let (theta, weight) = if l % 2 == 1 {
@@ -164,6 +195,37 @@ impl QuadPair {
     }
 }
 
+impl core::convert::From<QuadThetaWeightPair> for QuadPair {
+    fn from(value: QuadThetaWeightPair) -> Self {
+        Self {
+            position: value.theta.cos(),
+            weight: value.weight,
+        }
+    }
+}
+
+impl QuadPair {
+    /// Returns the `k`th node-weight pair associated with the `n`-node quadrature.
+    #[must_use = "the associated method returns a new QuadPair and does not modify the inputs"]
+    pub fn new(n: usize, k: usize) -> Self {
+        QuadThetaWeightPair::new(n, k).into()
+    }
+
+    /// Returns the x-position of the node.
+    #[inline]
+    #[must_use = "the method returns a value and does not modify `self`"]
+    pub const fn position(&self) -> f64 {
+        self.position
+    }
+
+    /// Returns the weight of the node.
+    #[inline]
+    #[must_use = "the method returns a value and does not modify `self`"]
+    pub const fn weight(&self) -> f64 {
+        self.weight
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::QuadPair;
@@ -176,7 +238,7 @@ mod test {
             (1..=l)
                 .map(|k| {
                     let temp = QuadPair::new(l, k);
-                    temp.w() * temp.x().exp()
+                    temp.weight() * temp.position().exp()
                 })
                 .sum::<f64>(),
             (1.0_f64).exp() - (-1.0_f64).exp(),
@@ -187,7 +249,7 @@ mod test {
             (1..=l)
                 .map(|k| {
                     let temp = QuadPair::new(l, k);
-                    temp.w() * (1000.0 * temp.x()).cos()
+                    temp.weight() * (1000.0 * temp.position()).cos()
                 })
                 .sum::<f64>(),
             (1000.0_f64).sin() / 500.0,
@@ -199,7 +261,7 @@ mod test {
             (1..=l)
                 .map(|k| {
                     let temp = QuadPair::new(l, k);
-                    0.5 * temp.w() * (0.5 * (temp.x() + 1.0)).ln()
+                    0.5 * temp.weight() * (0.5 * (temp.position() + 1.0)).ln()
                 })
                 .sum::<f64>(),
             -1.0,

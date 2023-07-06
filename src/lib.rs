@@ -349,4 +349,15 @@ mod test {
             epsilon = 1e-15
         );
     }
+
+    #[cfg(feature = "rayon")]
+    #[test]
+    fn test_large_parallel_integration() {
+        let integrator = GLQIntegrator::par_new(100_000_000.try_into().unwrap());
+        assert_relative_eq!(
+            integrator.par_integrate(0.0, 1.0, |x| x.ln()),
+            -1.0,
+            epsilon = 1e-15,
+        );
+    }
 }

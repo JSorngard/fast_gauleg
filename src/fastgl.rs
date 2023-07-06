@@ -206,7 +206,7 @@ impl QuadPair {
         let wis2 = w_inv_sinc * w_inv_sinc;
 
         // Finally compute the node and the weight
-        let theta = w * (nu + theta + w_inv_sinc * (sf1t + wis2 * (sf2t + wis2 * sf3t)));
+        let theta = w * (nu + theta * w_inv_sinc * (sf1t + wis2 * (sf2t + wis2 * sf3t)));
         let deno = b_nu_o_sin + b_nu_o_sin * wis2 * (wsf1t + wis2 * (wsf2t + wis2 * wsf3t));
         let weight = 2.0 * w / deno;
 
@@ -245,5 +245,43 @@ impl QuadPair {
             }
         };
         Self { theta, weight }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::QuadPair;
+    use approx::assert_relative_eq;
+
+    #[test]
+    fn check_manual_integrations() {
+        let l = 9;
+        assert_eq!(
+            (1..=l).map(|k| {
+                let temp = QuadPair::new(l, k);
+                temp.w() * temp.x().exp()
+            }).sum::<f64>(),
+            (1.0_f64).exp() - (-1.0_f64).exp(),
+        );
+
+        let l = 600;
+        assert_relative_eq!(
+            (1..=l).map(|k| {
+                let temp = QuadPair::new(l, k);
+                temp.w() * (1000.0 * temp.x()).cos()
+            }).sum::<f64>(),
+            (1000.0_f64).sin() / 500.0,
+            epsilon = 1e-14,
+        );
+
+        let l = 1_000_000;
+        assert_relative_eq!(
+            (1..=l).map(|k| {
+                let temp = QuadPair::new(l, k);
+                0.5 * temp.w() * (0.5 * (temp.x() + 1.0)).ln()
+            }).sum::<f64>(),
+            -1.0,
+            epsilon = 1e-12,
+        );
     }
 }

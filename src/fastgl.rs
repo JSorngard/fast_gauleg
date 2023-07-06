@@ -257,29 +257,35 @@ mod test {
     fn check_manual_integrations() {
         let l = 9;
         assert_eq!(
-            (1..=l).map(|k| {
-                let temp = QuadPair::new(l, k);
-                temp.w() * temp.x().exp()
-            }).sum::<f64>(),
+            (1..=l)
+                .map(|k| {
+                    let temp = QuadPair::new(l, k);
+                    temp.w() * temp.x().exp()
+                })
+                .sum::<f64>(),
             (1.0_f64).exp() - (-1.0_f64).exp(),
         );
 
         let l = 600;
         assert_relative_eq!(
-            (1..=l).map(|k| {
-                let temp = QuadPair::new(l, k);
-                temp.w() * (1000.0 * temp.x()).cos()
-            }).sum::<f64>(),
+            (1..=l)
+                .map(|k| {
+                    let temp = QuadPair::new(l, k);
+                    temp.w() * (1000.0 * temp.x()).cos()
+                })
+                .sum::<f64>(),
             (1000.0_f64).sin() / 500.0,
             epsilon = 1e-14,
         );
 
         let l = 1_000_000;
         assert_relative_eq!(
-            (1..=l).map(|k| {
-                let temp = QuadPair::new(l, k);
-                0.5 * temp.w() * (0.5 * (temp.x() + 1.0)).ln()
-            }).sum::<f64>(),
+            (1..=l)
+                .map(|k| {
+                    let temp = QuadPair::new(l, k);
+                    0.5 * temp.w() * (0.5 * (temp.x() + 1.0)).ln()
+                })
+                .sum::<f64>(),
             -1.0,
             epsilon = 1e-12,
         );

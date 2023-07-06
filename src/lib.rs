@@ -77,6 +77,7 @@
 //! ```
 
 use core::num::NonZeroUsize;
+#[rustfmt::skip]
 mod data;
 mod fastgl;
 use fastgl::{modify_gauleg, new_gauleg, QuadPair};

@@ -9,7 +9,7 @@
 //! # Examples
 //! Integrate a degree five polynomial while only evaluating it at three points:
 //! ```
-//! use gauss_legendre_quadrature::quad;
+//! use gl_quadrature::quad;
 //! // This macro is used in the docs of this crate to compare floating point values.
 //! // The assertion succeeds if the two values are within floating point error of each other,
 //! // or within an optional epsilon.
@@ -36,7 +36,7 @@
 //! Integrate a trancendental function:
 //! ```
 //! # use approx::assert_relative_eq;
-//! # use gauss_legendre_quadrature::quad;
+//! # use gl_quadrature::quad;
 //! assert_relative_eq!(
 //!     quad(0.0, 1.0, |x| (x + 1.0).ln().sin(), 10.try_into().unwrap()),
 //!     0.5 - f64::ln(2.0).cos() + f64::ln(2.0).sin(),
@@ -45,7 +45,7 @@
 //! Divergences can be hard to integrate. Integration with many points can compensate for this, and is still fast
 //! ```
 //! # use approx::assert_relative_eq;
-//! # use gauss_legendre_quadrature::quad;
+//! # use gl_quadrature::quad;
 //! assert_relative_eq!(
 //!     quad(0.0, 1.0, |x| x.ln(), 10.try_into().unwrap()),
 //!     -1.0,
@@ -61,7 +61,7 @@
 //! the calculation of the quadrature nodes and weights:
 //! ```
 //! # use approx::assert_relative_eq;
-//! use gauss_legendre_quadrature::GLQIntegrator;
+//! use gl_quadrature::GLQIntegrator;
 //! let integrator = GLQIntegrator::new(10.try_into().unwrap());
 //! assert_relative_eq!(
 //!     integrator.integrate(0.0, 2.0 * std::f64::consts::PI, |theta| theta.sin() * theta.cos()),
@@ -87,7 +87,7 @@ use fastgl::{modify_gauleg, new_gauleg, QuadPair};
 /// # Examples
 /// Integrate degree 5 polynomials with only 3 evaluation points:
 /// ```
-/// # use gauss_legendre_quadrature::GLQIntegrator;
+/// # use gl_quadrature::GLQIntegrator;
 /// use approx::assert_relative_eq;
 /// let integrator = GLQIntegrator::new(3.try_into().unwrap());
 /// assert_relative_eq!(
@@ -101,7 +101,7 @@ use fastgl::{modify_gauleg, new_gauleg, QuadPair};
 /// ```
 /// Non-polynomial functions need more points to evaluate correctly
 /// ```
-/// # use gauss_legendre_quadrature::GLQIntegrator;
+/// # use gl_quadrature::GLQIntegrator;
 /// # use approx::assert_relative_eq;
 /// let mut integrator = GLQIntegrator::new(3.try_into().unwrap());
 /// assert_relative_eq!(
@@ -163,7 +163,7 @@ impl GLQIntegrator {
 /// and the less it adheres to the degree bound.
 /// # Example
 /// ```
-/// # use gauss_legendre_quadrature::quad;
+/// # use gl_quadrature::quad;
 /// use approx::assert_relative_eq;
 /// use core::num::NonZeroUsize;
 /// // Integrate degree 2 and 3 polynomials with only 2 points:

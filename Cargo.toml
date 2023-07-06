@@ -1,5 +1,5 @@
 [package]
-name = "gauss_legendre_quadrature"
+name = "gl_quadrature"
 version = "0.1.0"
 edition = "2021"
 

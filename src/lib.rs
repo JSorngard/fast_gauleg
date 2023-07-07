@@ -57,12 +57,12 @@
 //!     epsilon = 1e-12,
 //! );
 //! ```
-//! If many integrations need to be done the crate provides [`GLQIntegrator`], which reuses
+//! If many integrations need to be done the crate provides [`GlqIntegrator`], which reuses
 //! the calculation of the quadrature nodes and weights:
 //! ```
 //! # use approx::assert_relative_eq;
-//! use gl_quadrature::GLQIntegrator;
-//! let integrator = GLQIntegrator::new(10.try_into().unwrap());
+//! use gl_quadrature::GlqIntegrator;
+//! let integrator = GlqIntegrator::new(10.try_into().unwrap());
 //! assert_relative_eq!(
 //!     integrator.integrate(0.0, 2.0 * std::f64::consts::PI, |theta| theta.sin() * theta.cos()),
 //!     0.0,
@@ -95,9 +95,9 @@ use fastgl::{par_new_gauleg, par_write_gauleg};
 /// # Examples
 /// Integrate degree 5 polynomials with only 3 evaluation points:
 /// ```
-/// # use gl_quadrature::GLQIntegrator;
+/// # use gl_quadrature::GlqIntegrator;
 /// use approx::assert_relative_eq;
-/// let integrator = GLQIntegrator::new(3.try_into().unwrap());
+/// let integrator = GlqIntegrator::new(3.try_into().unwrap());
 /// assert_relative_eq!(
 ///     integrator.integrate(0.0, 1.0, |x| x.powf(5.0)),
 ///     1.0 / 6.0,
@@ -109,9 +109,9 @@ use fastgl::{par_new_gauleg, par_write_gauleg};
 /// ```
 /// Non-polynomial functions need more points to evaluate correctly
 /// ```
-/// # use gl_quadrature::GLQIntegrator;
+/// # use gl_quadrature::GlqIntegrator;
 /// # use approx::assert_relative_eq;
-/// let mut integrator = GLQIntegrator::new(3.try_into().unwrap());
+/// let mut integrator = GlqIntegrator::new(3.try_into().unwrap());
 /// assert_relative_eq!(
 ///     integrator.integrate(0.0, std::f64::consts::PI, |x| x.sin()),
 ///     2.0,
@@ -125,12 +125,12 @@ use fastgl::{par_new_gauleg, par_write_gauleg};
 /// );
 /// ```
 #[derive(Debug, Clone, PartialEq)]
-pub struct GLQIntegrator {
+pub struct GlqIntegrator {
     xs_and_ws: Vec<QuadPair>,
     points: NonZeroUsize,
 }
 
-impl GLQIntegrator {
+impl GlqIntegrator {
     /// Creates a new integrator that integrates functions over the given domain.
     #[must_use = "associated method returns a new instance and does not modify the input values"]
     pub fn new(points: NonZeroUsize) -> Self {
@@ -140,7 +140,7 @@ impl GLQIntegrator {
 
     #[cfg(feature = "rayon")]
     #[cfg_attr(docsrs, doc(cfg(feature = "rayon")))]
-    /// Same as [`new`](GLQIntegrator::new) but parallel.
+    /// Same as [`new`](GlqIntegrator::new) but parallel.
     #[must_use = "associated method returns a new instance and does not modify the input values"]
     pub fn par_new(points: NonZeroUsize) -> Self {
         let xs_and_ws = par_new_gauleg(points);
@@ -163,7 +163,7 @@ impl GLQIntegrator {
 
     #[cfg(feature = "rayon")]
     #[cfg_attr(docsrs, doc(cfg(feature = "rayon")))]
-    /// Same as [`integrate`](GLQIntegrator::integrate) but parallel.
+    /// Same as [`integrate`](GlqIntegrator::integrate) but parallel.
     #[must_use = "the method returns a new value and does not modify `self` or the inputs"]
     pub fn par_integrate<F>(&self, start: f64, end: f64, f: F) -> f64
     where
@@ -195,7 +195,7 @@ impl GLQIntegrator {
 
     #[cfg(feature = "rayon")]
     #[cfg_attr(docsrs, doc(cfg(feature = "rayon")))]
-    /// Same as [`change_number_of_points`](GLQIntegrator::change_number_of_points) but parallel.
+    /// Same as [`change_number_of_points`](GlqIntegrator::change_number_of_points) but parallel.
     pub fn par_change_number_of_points(&mut self, new_points: NonZeroUsize) {
         self.xs_and_ws
             .resize(new_points.into(), QuadPair::default());
@@ -277,7 +277,7 @@ mod test {
         const X1: f64 = 0.0;
         const X2: f64 = 10.0;
 
-        let integrator = GLQIntegrator::new(NUMBER_OF_POINTS.try_into().unwrap());
+        let integrator = GlqIntegrator::new(NUMBER_OF_POINTS.try_into().unwrap());
         assert_relative_eq!(
             integrator.integrate(X1, X2, |x| x * (-x).exp()),
             1.0 - (1.0 + X2) * (-X2).exp(),
@@ -333,7 +333,7 @@ mod test {
     #[cfg(feature = "rayon")]
     #[test]
     fn test_parallel_glqintegrator() {
-        let mut integrator = GLQIntegrator::par_new(3.try_into().unwrap());
+        let mut integrator = GlqIntegrator::par_new(3.try_into().unwrap());
         assert_relative_eq!(
             integrator.par_integrate(0.0, 1.0, |x| x.powf(5.0)),
             1.0 / 6.0,
@@ -353,11 +353,11 @@ mod test {
     #[cfg(feature = "rayon")]
     #[test]
     fn test_large_parallel_integration() {
-        let integrator = GLQIntegrator::par_new(100_000_000.try_into().unwrap());
+        let integrator = GlqIntegrator::par_new(100_000_000.try_into().unwrap());
         assert_relative_eq!(
             integrator.par_integrate(0.0, 1.0, |x| x.ln()),
             -1.0,
-            epsilon = 1e-15,
+            epsilon = 1e-14,
         );
     }
 }

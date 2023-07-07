@@ -26,41 +26,41 @@ use core::{cmp::Ordering, num::NonZeroUsize};
 use rayon::prelude::*;
 use std::f64::consts::PI;
 
-/// Generate a [`Vec`] of [`QuadPair`]s for manual integration.
+/// Generate a [`Vec`] of [`GlqPair`]s for manual integration.
 #[must_use = "the function returns a new value and does not modify the input"]
-pub fn new_gauleg(points: NonZeroUsize) -> Vec<QuadPair> {
+pub fn new_gauleg(points: NonZeroUsize) -> Vec<GlqPair> {
     (1..=points.get())
-        .map(|k| QuadPair::new(points.into(), k))
+        .map(|k| GlqPair::new(points.into(), k))
         .collect()
 }
 
-/// Writes [`QuadPair`]s to an already allocated slice for manual integration.
+/// Writes [`GlqPair`]s to an already allocated slice for manual integration.
 /// Does nothing if the slice is empty.
-pub fn write_gauleg(points: &mut [QuadPair]) {
+pub fn write_gauleg(points: &mut [GlqPair]) {
     let l = points.len();
     for (i, point) in points.iter_mut().enumerate() {
-        *point = QuadPair::new(l, i + 1);
+        *point = GlqPair::new(l, i + 1);
     }
 }
 
 #[cfg(feature = "rayon")]
 /// Same as [`new_gauleg`] but parallel.
 #[must_use = "the function returns a new value and does not modify the input"]
-pub fn par_new_gauleg(points: NonZeroUsize) -> Vec<QuadPair> {
+pub fn par_new_gauleg(points: NonZeroUsize) -> Vec<GlqPair> {
     (1..=points.get())
         .into_par_iter()
-        .map(|k| QuadPair::new(points.into(), k))
+        .map(|k| GlqPair::new(points.into(), k))
         .collect()
 }
 
 #[cfg(feature = "rayon")]
 /// Same as [`write_gauleg`] but parallel.
-pub fn par_write_gauleg(points: &mut [QuadPair]) {
+pub fn par_write_gauleg(points: &mut [GlqPair]) {
     let l = points.len();
     points
         .par_iter_mut()
         .enumerate()
-        .for_each(|(i, point)| *point = QuadPair::new(l, i + 1));
+        .for_each(|(i, point)| *point = GlqPair::new(l, i + 1));
 }
 
 /// This function computes the kth zero of the BesselJ(0,x)
@@ -94,11 +94,11 @@ fn besselj1_squared(k: usize) -> f64 {
 /// # Example
 /// Integrate `f(x) = e^x` in the interval `[-1, 1]`.
 /// ```
-/// # use gl_quadrature::QuadPair;
+/// # use gl_quadrature::GlqPair;
 /// let n = 9;
 /// assert_eq!(
 ///     (1..=n).map(|k| {
-///         let p = QuadPair::new(n, k);
+///         let p = GlqPair::new(n, k);
 ///         p.weight() * p.position().exp()
 ///     }).sum::<f64>(),
 ///     1.0_f64.exp() - (-1.0_f64).exp(),
@@ -106,19 +106,19 @@ fn besselj1_squared(k: usize) -> f64 {
 /// ```
 /// Integrate `f(x) = x^2 - x - 1` in the interval `[0, 1]`.
 /// ```
-/// # use gl_quadrature::QuadPair;
+/// # use gl_quadrature::GlqPair;
 /// let n = 3;
 /// let f = |x| x * x - x - 1.0;
 /// assert_eq!(
 ///     (1..=n).map(|k| {
-///         let p = QuadPair::new(n, k);
+///         let p = GlqPair::new(n, k);
 ///         0.5 * p.weight() * f(0.5 * p.position() + 0.5)
 ///     }).sum::<f64>(),
 ///     -7.0 / 6.0,
 /// );
 /// ```
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
-pub struct QuadPair {
+pub struct GlqPair {
     position: f64,
     weight: f64,
 }
@@ -217,7 +217,7 @@ impl QuadThetaWeightPair {
     }
 }
 
-impl core::convert::From<QuadThetaWeightPair> for QuadPair {
+impl core::convert::From<QuadThetaWeightPair> for GlqPair {
     fn from(value: QuadThetaWeightPair) -> Self {
         Self {
             position: value.theta.cos(),
@@ -226,9 +226,9 @@ impl core::convert::From<QuadThetaWeightPair> for QuadPair {
     }
 }
 
-impl QuadPair {
+impl GlqPair {
     /// Returns the `k`th node-weight pair associated with the `n`-node quadrature.
-    #[must_use = "the associated method returns a new QuadPair and does not modify the inputs"]
+    #[must_use = "the associated method returns a new GlqPair and does not modify the inputs"]
     pub fn new(n: usize, k: usize) -> Self {
         QuadThetaWeightPair::new(n, k).into()
     }
@@ -250,7 +250,7 @@ impl QuadPair {
 
 #[cfg(test)]
 mod test {
-    use super::QuadPair;
+    use super::GlqPair;
     use approx::assert_relative_eq;
 
     #[test]
@@ -259,7 +259,7 @@ mod test {
         assert_eq!(
             (1..=l)
                 .map(|k| {
-                    let temp = QuadPair::new(l, k);
+                    let temp = GlqPair::new(l, k);
                     temp.weight() * temp.position().exp()
                 })
                 .sum::<f64>(),
@@ -270,7 +270,7 @@ mod test {
         assert_relative_eq!(
             (1..=l)
                 .map(|k| {
-                    let temp = QuadPair::new(l, k);
+                    let temp = GlqPair::new(l, k);
                     temp.weight() * (1000.0 * temp.position()).cos()
                 })
                 .sum::<f64>(),
@@ -282,7 +282,7 @@ mod test {
         assert_relative_eq!(
             (1..=l)
                 .map(|k| {
-                    let temp = QuadPair::new(l, k);
+                    let temp = GlqPair::new(l, k);
                     0.5 * temp.weight() * (0.5 * (temp.position() + 1.0)).ln()
                 })
                 .sum::<f64>(),

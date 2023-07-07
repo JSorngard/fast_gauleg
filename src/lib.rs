@@ -9,7 +9,7 @@
 //! # Examples
 //! Integrate a degree five polynomial while only evaluating it at three points:
 //! ```
-//! use gl_quadrature::quad;
+//! use gl_quadrature::glq_integrate;
 //! // This macro is used in the docs of this crate to compare floating point values.
 //! // The assertion succeeds if the two values are within floating point error of each other,
 //! // or within an optional epsilon.
@@ -20,12 +20,12 @@
 //!
 //! // Check the orthogonality of Legendre polynomials of degree 2 and 3:
 //! assert_relative_eq!(
-//!     quad(-1.0, 1.0, |x| 0.25 * (3.0 * x.powf(2.0) - 1.0) * (5.0 * x.powf(3.0) - 3.0 * x), pts),
+//!     glq_integrate(-1.0, 1.0, |x| 0.25 * (3.0 * x.powf(2.0) - 1.0) * (5.0 * x.powf(3.0) - 3.0 * x), pts),
 //!     0.0,
 //! );
 //! // Integrating more complicated polynomials or integrating outside [-1, 1] can reduce accuracy
 //! assert_relative_eq!(
-//!     quad(-5.0, 2.0, |x| 0.125 * (63.0 * x.powf(5.0) - 70.0 * x.powf(3.0) + 15.0 * x), pts),
+//!     glq_integrate(-5.0, 2.0, |x| 0.125 * (63.0 * x.powf(5.0) - 70.0 * x.powf(3.0) + 15.0 * x), pts),
 //!     -305781.0 / 16.0,
 //!     // The exponent in the epsilon is always chosen
 //!     // to be as small as possible
@@ -36,23 +36,23 @@
 //! Integrate a trancendental function:
 //! ```
 //! # use approx::assert_relative_eq;
-//! # use gl_quadrature::quad;
+//! # use gl_quadrature::glq_integrate;
 //! assert_relative_eq!(
-//!     quad(0.0, 1.0, |x| (x + 1.0).ln().sin(), 10.try_into().unwrap()),
+//!     glq_integrate(0.0, 1.0, |x| (x + 1.0).ln().sin(), 10.try_into().unwrap()),
 //!     0.5 - f64::ln(2.0).cos() + f64::ln(2.0).sin(),
 //! );   
 //! ```
 //! Divergences can be hard to integrate. Integration with many points can compensate for this, and is still fast
 //! ```
 //! # use approx::assert_relative_eq;
-//! # use gl_quadrature::quad;
+//! # use gl_quadrature::glq_integrate;
 //! assert_relative_eq!(
-//!     quad(0.0, 1.0, |x| x.ln(), 10.try_into().unwrap()),
+//!     glq_integrate(0.0, 1.0, |x| x.ln(), 10.try_into().unwrap()),
 //!     -1.0,
 //!     epsilon = 1e-2,
 //! );
 //! assert_relative_eq!(
-//!     quad(0.0, 1.0, |x| x.ln(), 1_000_000.try_into().unwrap()),
+//!     glq_integrate(0.0, 1.0, |x| x.ln(), 1_000_000.try_into().unwrap()),
 //!     -1.0,
 //!     epsilon = 1e-12,
 //! );
@@ -84,7 +84,7 @@ use rayon::prelude::*;
 #[rustfmt::skip]
 mod data;
 mod fastgl;
-pub use fastgl::QuadPair;
+pub use fastgl::GlqPair;
 use fastgl::{new_gauleg, write_gauleg};
 #[cfg(feature = "rayon")]
 use fastgl::{par_new_gauleg, par_write_gauleg};
@@ -126,7 +126,7 @@ use fastgl::{par_new_gauleg, par_write_gauleg};
 /// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct GlqIntegrator {
-    xs_and_ws: Vec<QuadPair>,
+    xs_and_ws: Vec<GlqPair>,
     points: NonZeroUsize,
 }
 
@@ -188,7 +188,7 @@ impl GlqIntegrator {
     /// If the number is not increased the old allocation is reused.
     pub fn change_number_of_points(&mut self, new_points: NonZeroUsize) {
         self.xs_and_ws
-            .resize(new_points.into(), QuadPair::default());
+            .resize(new_points.into(), GlqPair::default());
         write_gauleg(&mut self.xs_and_ws);
         self.points = new_points;
     }
@@ -198,7 +198,7 @@ impl GlqIntegrator {
     /// Same as [`change_number_of_points`](GlqIntegrator::change_number_of_points) but parallel.
     pub fn par_change_number_of_points(&mut self, new_points: NonZeroUsize) {
         self.xs_and_ws
-            .resize(new_points.into(), QuadPair::default());
+            .resize(new_points.into(), GlqPair::default());
         par_write_gauleg(&mut self.xs_and_ws);
         self.points = new_points;
     }
@@ -211,28 +211,28 @@ impl GlqIntegrator {
 /// and the less it adheres to the degree bound.
 /// # Example
 /// ```
-/// # use gl_quadrature::quad;
+/// # use gl_quadrature::glq_integrate;
 /// use approx::assert_relative_eq;
 /// use core::num::NonZeroUsize;
 /// // Integrate degree 2 and 3 polynomials with only 2 points:
 /// let pts = NonZeroUsize::new(2).unwrap();
 /// assert_relative_eq!(
-///     quad(0.0, 1.0, |x| x * x, pts),
+///     glq_integrate(0.0, 1.0, |x| x * x, pts),
 ///     1.0 / 3.0,
 /// );
 /// assert_relative_eq!(
-///     quad(-1.0, 1.0, |x| 0.5 * (3.0 * x * x - 1.0) * x, pts),
+///     glq_integrate(-1.0, 1.0, |x| 0.5 * (3.0 * x * x - 1.0) * x, pts),
 ///     0.0
 /// );
 /// // Non-polynomials need more points to evaluate correctly:
 /// const END: f64 = 10.0;
 /// assert_relative_eq!(
-///     quad(0.0, END, |x| x * (-x).exp(), 13.try_into().unwrap()),
+///     glq_integrate(0.0, END, |x| x * (-x).exp(), 13.try_into().unwrap()),
 ///     (1.0 - (1.0 + END) * (-END).exp()),
 /// );
 /// ```
 #[must_use = "the function returns a value and does not modify its inputs"]
-pub fn quad<F>(start: f64, end: f64, f: F, points: NonZeroUsize) -> f64
+pub fn glq_integrate<F>(start: f64, end: f64, f: F, points: NonZeroUsize) -> f64
 where
     F: Fn(f64) -> f64,
 {
@@ -249,9 +249,9 @@ where
 
 #[cfg(feature = "rayon")]
 #[cfg_attr(docsrs, doc(cfg(feature = "rayon")))]
-/// Same as [`quad`] but parallel.
+/// Same as [`glq_integrate`] but parallel.
 #[must_use = "the function returns a value and does not modify its inputs"]
-pub fn par_quad<F>(start: f64, end: f64, f: F, points: NonZeroUsize) -> f64
+pub fn par_glq_integrate<F>(start: f64, end: f64, f: F, points: NonZeroUsize) -> f64
 where
     F: Fn(f64) -> f64 + Send + Sync,
 {
@@ -300,7 +300,7 @@ mod test {
     #[test]
     fn check_large_integral() {
         assert_relative_eq!(
-            quad(0.0, 1.0, |x| x.ln(), 1_000_000.try_into().unwrap()),
+            glq_integrate(0.0, 1.0, |x| x.ln(), 1_000_000.try_into().unwrap()),
             -1.0,
             epsilon = 1e-6
         );
@@ -308,14 +308,14 @@ mod test {
 
     #[cfg(feature = "rayon")]
     #[test]
-    fn test_parallel_quad() {
-        use super::par_quad;
+    fn test_parallel_glq_integrate() {
+        use super::par_glq_integrate;
         assert_relative_eq!(
-            par_quad(0.0, 1.0, |x| x * x, 3.try_into().unwrap()),
+            par_glq_integrate(0.0, 1.0, |x| x * x, 3.try_into().unwrap()),
             1.0 / 3.0,
         );
         assert_relative_eq!(
-            par_quad(
+            par_glq_integrate(
                 -1.0,
                 1.0,
                 |x| 0.5 * (3.0 * x * x - 1.0) * x,
@@ -325,7 +325,7 @@ mod test {
         );
         const END: f64 = 10.0;
         assert_relative_eq!(
-            par_quad(0.0, END, |x| x * (-x).exp(), 13.try_into().unwrap()),
+            par_glq_integrate(0.0, END, |x| x * (-x).exp(), 13.try_into().unwrap()),
             (1.0 - (1.0 + END) * (-END).exp()),
         );
     }

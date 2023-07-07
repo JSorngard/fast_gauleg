@@ -18,7 +18,7 @@
 //! HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 //! OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //!
-//! It was ported to Rust and extended by Johanna Sörngård in 2023.
+//! This Rust implementation was written by Johanna Sörngård in 2023.
 
 use crate::data::{CL, EVEN_THETA_ZEROS, EVEN_WEIGHTS, J1, JZ, ODD_THETA_ZEROS, ODD_WEIGHTS};
 use core::{cmp::Ordering, num::NonZeroUsize};

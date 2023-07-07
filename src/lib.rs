@@ -1,6 +1,5 @@
 //! This crate contains tools for numerical integration using [Gauss-Legendre quadrature](https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_quadrature).
 //! This is a method that allows integration of polynomial functions using very few evaluation points.
-//! A quadrature using `n` points can exactly integrate a polynomial of degree `2n - 1` in the interval `[-1, 1]`.
 //! Non-polynomials will need more evaluation points, and the answer will be less accurate
 //! the less polynomial-like the given function is and the more it violates the degree bound.
 //!
@@ -95,8 +94,6 @@ use fastgl::{new_gauleg, write_gauleg};
 use fastgl::{par_new_gauleg, par_write_gauleg};
 
 /// An object that can integrate `Fn(f64) -> f64` functions and closures.
-/// If instantiated with `n` points it can integrate polynomials of degree `2n - 1` exactly.
-/// It is less accurate the less polynomial-like the given function is, and the less it conforms to the degree-bound.
 /// # Examples
 /// Integrate degree 5 polynomials with only 3 evaluation points:
 /// ```
@@ -210,9 +207,7 @@ impl GlqIntegrator {
 
 /// Integrates the given function over the interval `[start, end]`
 /// using [Gauss-Legendre quadrature](https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_quadrature)
-/// with `points` points. With `n` points it can integrate polynomials of degree `2n - 1` exactly.
-/// The result will be less accurate the less polynomial-like the function is,
-/// and the less it adheres to the degree bound.
+/// with `points` evaluation points.
 /// # Example
 /// ```
 /// # use gl_quadrature::glq_integrate;

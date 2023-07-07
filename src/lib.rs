@@ -187,8 +187,7 @@ impl GlqIntegrator {
     /// Changes the number of points used during integration.
     /// If the number is not increased the old allocation is reused.
     pub fn change_number_of_points(&mut self, new_points: NonZeroUsize) {
-        self.xs_and_ws
-            .resize(new_points.into(), GlqPair::default());
+        self.xs_and_ws.resize(new_points.into(), GlqPair::default());
         write_gauleg(&mut self.xs_and_ws);
         self.points = new_points;
     }
@@ -197,8 +196,7 @@ impl GlqIntegrator {
     #[cfg_attr(docsrs, doc(cfg(feature = "rayon")))]
     /// Same as [`change_number_of_points`](GlqIntegrator::change_number_of_points) but parallel.
     pub fn par_change_number_of_points(&mut self, new_points: NonZeroUsize) {
-        self.xs_and_ws
-            .resize(new_points.into(), GlqPair::default());
+        self.xs_and_ws.resize(new_points.into(), GlqPair::default());
         par_write_gauleg(&mut self.xs_and_ws);
         self.points = new_points;
     }

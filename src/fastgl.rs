@@ -228,6 +228,8 @@ impl core::convert::From<QuadThetaWeightPair> for GlqPair {
 
 impl GlqPair {
     /// Returns the `k`th node-weight pair associated with the `n`-node quadrature.
+    /// # Panic
+    /// Panics if k == 0 or n < k
     #[must_use = "the associated method returns a new GlqPair and does not modify the inputs"]
     pub fn new(n: usize, k: usize) -> Self {
         QuadThetaWeightPair::new(n, k).into()

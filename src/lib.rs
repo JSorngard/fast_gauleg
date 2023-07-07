@@ -45,10 +45,13 @@
 //!     0.5 - f64::ln(2.0).cos() + f64::ln(2.0).sin(),
 //! );   
 //! ```
-//! Divergences can be hard to integrate. Integration with many points can compensate for this, and is still fast
+//! Divergences can be hard to integrate with this method.
+//! Integration with many points can compensate for this, and is still fast
 //! ```
 //! # use approx::assert_relative_eq;
 //! # use gl_quadrature::glq_integrate;
+//! # #[cfg(feature = "rayon")]
+//! # use gl_quadrature::par_glq_integrate;
 //! assert_relative_eq!(
 //!     glq_integrate(0.0, 1.0, |x| x.ln(), 10.try_into().unwrap()),
 //!     -1.0,
@@ -58,6 +61,13 @@
 //!     glq_integrate(0.0, 1.0, |x| x.ln(), 1_000_000.try_into().unwrap()),
 //!     -1.0,
 //!     epsilon = 1e-12,
+//! );
+//! // Very large calculations can be done in parallel (needs the `rayon` feature)
+//! # #[cfg(feature = "rayon")]
+//! assert_relative_eq!(
+//!     par_glq_integrate(0.0, 1.0, |x| x.ln(), 100_000_000.try_into().unwrap()),
+//!     -1.0,
+//!     epsilon = 1e-14,
 //! );
 //! ```
 //! If many integrations need to be done the crate provides [`GlqIntegrator`], which reuses

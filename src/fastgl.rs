@@ -77,7 +77,7 @@ fn besselj0_zero(k: usize) -> f64 {
     }
 }
 
-/// This function computes the square of BesselJ(1, BesselZero(0, k))
+/// This function computes BesselJ(1, kth zero of BesselJ(0, x))^2
 #[rustfmt::skip]
 #[must_use]
 fn besselj1_squared(k: usize) -> f64 {

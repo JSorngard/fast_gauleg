@@ -12,7 +12,7 @@ approx = "0.5.1"
 rayon = {version = "1.7", optional = true}
 
 [features]
-rayon = ["dep:rayon"]
+parallel = ["dep:rayon"]
 
 [package.metadata.docs.rs]
 all-features = true

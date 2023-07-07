@@ -50,7 +50,7 @@
 //! ```
 //! # use approx::assert_relative_eq;
 //! # use gl_quadrature::glq_integrate;
-//! # #[cfg(feature = "rayon")]
+//! # #[cfg(feature = "parallel")]
 //! # use gl_quadrature::par_glq_integrate;
 //! assert_relative_eq!(
 //!     glq_integrate(0.0, 1.0, |x| x.ln(), 10.try_into().unwrap()),
@@ -62,8 +62,8 @@
 //!     -1.0,
 //!     epsilon = 1e-12,
 //! );
-//! // Very large calculations can be done in parallel (needs the `rayon` feature)
-//! # #[cfg(feature = "rayon")]
+//! // Very large calculations can be done in parallel (needs the `parallel` feature)
+//! # #[cfg(feature = "parallel")]
 //! assert_relative_eq!(
 //!     par_glq_integrate(0.0, 1.0, |x| x.ln(), 100_000_000.try_into().unwrap()),
 //!     -1.0,
@@ -92,14 +92,14 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 use core::num::NonZeroUsize;
-#[cfg(feature = "rayon")]
+#[cfg(feature = "parallel")]
 use rayon::prelude::*;
 #[rustfmt::skip]
 mod data;
 mod fastgl;
 pub use fastgl::GlqPair;
 use fastgl::{new_gauleg, write_gauleg};
-#[cfg(feature = "rayon")]
+#[cfg(feature = "parallel")]
 use fastgl::{par_new_gauleg, par_write_gauleg};
 
 /// An object that can integrate `Fn(f64) -> f64` functions and closures.
@@ -150,8 +150,8 @@ impl GlqIntegrator {
         Self { xs_and_ws, points }
     }
 
-    #[cfg(feature = "rayon")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "rayon")))]
+    #[cfg(feature = "parallel")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "parallel")))]
     /// Same as [`new`](GlqIntegrator::new) but parallel.
     #[must_use = "associated method returns a new instance and does not modify the input values"]
     pub fn par_new(points: NonZeroUsize) -> Self {
@@ -173,8 +173,8 @@ impl GlqIntegrator {
             * 0.5
     }
 
-    #[cfg(feature = "rayon")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "rayon")))]
+    #[cfg(feature = "parallel")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "parallel")))]
     /// Same as [`integrate`](GlqIntegrator::integrate) but parallel.
     #[must_use = "the method returns a new value and does not modify `self` or the inputs"]
     pub fn par_integrate<F>(&self, start: f64, end: f64, f: F) -> f64
@@ -204,8 +204,8 @@ impl GlqIntegrator {
         self.points = new_points;
     }
 
-    #[cfg(feature = "rayon")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "rayon")))]
+    #[cfg(feature = "parallel")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "parallel")))]
     /// Same as [`change_number_of_points`](GlqIntegrator::change_number_of_points) but parallel.
     pub fn par_change_number_of_points(&mut self, new_points: NonZeroUsize) {
         self.xs_and_ws.resize(new_points.into(), GlqPair::default());
@@ -269,8 +269,8 @@ where
         .sum()
 }
 
-#[cfg(feature = "rayon")]
-#[cfg_attr(docsrs, doc(cfg(feature = "rayon")))]
+#[cfg(feature = "parallel")]
+#[cfg_attr(docsrs, doc(cfg(feature = "parallel")))]
 /// Same as [`glq_integrate`] but parallel.
 #[must_use = "the function returns a value and does not modify its inputs"]
 pub fn par_glq_integrate<F>(start: f64, end: f64, f: F, points: NonZeroUsize) -> f64
@@ -328,7 +328,7 @@ mod test {
         );
     }
 
-    #[cfg(feature = "rayon")]
+    #[cfg(feature = "parallel")]
     #[test]
     fn test_parallel_glq_integrate() {
         use super::par_glq_integrate;
@@ -352,7 +352,7 @@ mod test {
         );
     }
 
-    #[cfg(feature = "rayon")]
+    #[cfg(feature = "parallel")]
     #[test]
     fn test_parallel_glqintegrator() {
         let mut integrator = GlqIntegrator::par_new(3.try_into().unwrap());
@@ -372,7 +372,7 @@ mod test {
         );
     }
 
-    #[cfg(feature = "rayon")]
+    #[cfg(feature = "parallel")]
     #[test]
     fn test_large_parallel_integration() {
         let integrator = GlqIntegrator::par_new(100_000_000.try_into().unwrap());

@@ -22,7 +22,7 @@
 
 use crate::data::{CL, EVEN_THETA_ZEROS, EVEN_WEIGHTS, J1, JZ, ODD_THETA_ZEROS, ODD_WEIGHTS};
 use core::{cmp::Ordering, num::NonZeroUsize};
-#[cfg(feature = "rayon")]
+#[cfg(feature = "parallel")]
 use rayon::prelude::*;
 use std::f64::consts::PI;
 
@@ -43,7 +43,7 @@ pub fn write_gauleg(points: &mut [GlqPair]) {
     }
 }
 
-#[cfg(feature = "rayon")]
+#[cfg(feature = "parallel")]
 /// Same as [`new_gauleg`] but parallel.
 #[must_use = "the function returns a new value and does not modify the input"]
 pub fn par_new_gauleg(points: NonZeroUsize) -> Vec<GlqPair> {
@@ -53,7 +53,7 @@ pub fn par_new_gauleg(points: NonZeroUsize) -> Vec<GlqPair> {
         .collect()
 }
 
-#[cfg(feature = "rayon")]
+#[cfg(feature = "parallel")]
 /// Same as [`write_gauleg`] but parallel.
 pub fn par_write_gauleg(points: &mut [GlqPair]) {
     let l = points.len();

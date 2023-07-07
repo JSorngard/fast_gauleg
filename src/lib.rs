@@ -29,7 +29,7 @@
 //!     // while still passing the assertion.
 //!     epsilon = 1e-11,
 //! );
-//! // For polynomials the accuracy can often be improved with more points
+//! // The accuracy can often be improved with more points
 //! let pts = NonZeroUsize::new(30).unwrap();
 //! assert_relative_eq!(
 //!     glq_integrate(-5.0, 2.0, |x| 0.125 * (63.0 * x.powf(5.0) - 70.0 * x.powf(3.0) + 15.0 * x), pts),

@@ -10,9 +10,11 @@ approx = "0.5.1"
 
 [dependencies]
 rayon = {version = "1.7", optional = true}
+serde = {version = "1.0", features = ["derive"], optional = true}
 
 [features]
 parallel = ["dep:rayon"]
+serde_support = ["dep:serde"]
 
 [package.metadata.docs.rs]
 all-features = true

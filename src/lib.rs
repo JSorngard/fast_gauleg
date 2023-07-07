@@ -101,6 +101,8 @@ pub use fastgl::GlqPair;
 use fastgl::{new_gauleg, write_gauleg};
 #[cfg(feature = "parallel")]
 use fastgl::{par_new_gauleg, par_write_gauleg};
+#[cfg(feature = "serde_support")]
+use serde::{Serialize, Deserialize};
 
 /// An object that can integrate `Fn(f64) -> f64` functions and closures.
 /// # Examples
@@ -136,6 +138,7 @@ use fastgl::{par_new_gauleg, par_write_gauleg};
 /// );
 /// ```
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
 pub struct GlqIntegrator {
     xs_and_ws: Vec<GlqPair>,
     points: NonZeroUsize,

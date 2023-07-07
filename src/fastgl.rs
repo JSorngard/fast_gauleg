@@ -25,6 +25,8 @@ use core::{cmp::Ordering, num::NonZeroUsize};
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 use std::f64::consts::PI;
+#[cfg(feature = "serde_support")]
+use serde::{Serialize, Deserialize};
 
 /// Generate a [`Vec`] of [`GlqPair`]s for manual integration.
 #[must_use = "the function returns a new value and does not modify the input"]
@@ -118,6 +120,7 @@ fn besselj1_squared(k: usize) -> f64 {
 /// );
 /// ```
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
+#[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
 pub struct GlqPair {
     position: f64,
     weight: f64,

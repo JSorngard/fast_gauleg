@@ -9,7 +9,7 @@
 //! use gl_quadrature::glq_integrate;
 //! // This macro is used in the docs of this crate to compare floating point values.
 //! // The assertion succeeds if the two values are within floating point error of each other,
-//! // or within an optional epsilon.
+//! // or their relative difference is within an optional epsilon.
 //! use approx::assert_relative_eq;
 //! use core::num::NonZeroUsize;
 //!
@@ -27,11 +27,11 @@
 //!     // The exponent in the epsilon is always chosen
 //!     // to be as small as possible
 //!     // while still passing the assertion.
-//!     epsilon = 1e-11,
+//!     epsilon = 1e-10,
 //! );
 //! // The accuracy can often be improved with more points
-//! let pts = NonZeroUsize::new(30).unwrap();
-//! assert_relative_eq!(
+//! let pts = NonZeroUsize::new(5).unwrap();
+//! assert_eq!(
 //!     glq_integrate(-5.0, 2.0, |x| 0.125 * (63.0 * x.powf(5.0) - 70.0 * x.powf(3.0) + 15.0 * x), pts),
 //!     -305781.0 / 16.0,
 //! );
@@ -67,7 +67,7 @@
 //! assert_relative_eq!(
 //!     par_glq_integrate(0.0, 1.0, |x| x.ln(), 100_000_000.try_into().unwrap()),
 //!     -1.0,
-//!     epsilon = 1e-14,
+//!     epsilon = 1e-15,
 //! );
 //! ```
 //! If many integrations need to be done the crate provides [`GlqIntegrator`], which reuses
@@ -92,8 +92,12 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 use core::num::NonZeroUsize;
+
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
+#[cfg(feature = "serde_support")]
+use serde::{Deserialize, Serialize};
+
 #[rustfmt::skip]
 mod data;
 mod fastgl;
@@ -101,8 +105,6 @@ pub use fastgl::GlqPair;
 use fastgl::{new_gauleg, write_gauleg};
 #[cfg(feature = "parallel")]
 use fastgl::{par_new_gauleg, par_write_gauleg};
-#[cfg(feature = "serde_support")]
-use serde::{Serialize, Deserialize};
 
 /// An object that can integrate `Fn(f64) -> f64` functions and closures.
 /// # Examples
@@ -168,12 +170,13 @@ impl GlqIntegrator {
     where
         F: Fn(f64) -> f64,
     {
+        let width = (end - start) * 0.5;
+        let offset = (start + end) * 0.5;
         self.xs_and_ws
             .iter()
-            .map(|p| p.weight() * f((end - start) * 0.5 * p.position() + (start + end) * 0.5))
+            .map(|p| p.weight() * f(width * p.position() + offset))
             .sum::<f64>()
-            * (end - start)
-            * 0.5
+            * width
     }
 
     #[cfg(feature = "parallel")]
@@ -184,12 +187,13 @@ impl GlqIntegrator {
     where
         F: Fn(f64) -> f64 + Send + Sync,
     {
+        let width = (end - start) * 0.5;
+        let offset = (start + end) * 0.5;
         self.xs_and_ws
             .par_iter()
-            .map(|p| p.weight() * f((end - start) * 0.5 * p.position() + (start + end) * 0.5))
+            .map(|p| p.weight() * f(width * p.position() + offset))
             .sum::<f64>()
-            * (end - start)
-            * 0.5
+            * width
     }
 
     /// Returns the number of points in the integration domain
@@ -245,7 +249,7 @@ impl GlqIntegrator {
 ///     glq_integrate(0.0, 1.0, |x| x * x, pts),
 ///     1.0 / 3.0,
 /// );
-/// assert_relative_eq!(
+/// assert_eq!(
 ///     glq_integrate(-1.0, 1.0, |x| 0.5 * (3.0 * x * x - 1.0) * x, pts),
 ///     0.0
 /// );
@@ -261,15 +265,13 @@ pub fn glq_integrate<F>(start: f64, end: f64, f: F, points: NonZeroUsize) -> f64
 where
     F: Fn(f64) -> f64,
 {
-    let xs_and_ws = new_gauleg(points);
-    xs_and_ws
+    let width = (end - start) * 0.5;
+    let offset = (start + end) * 0.5;
+    new_gauleg(points)
         .into_iter()
-        .map(|p| {
-            0.5 * (end - start)
-                * p.weight()
-                * f(0.5 * (end - start) * p.position() + 0.5 * (start + end))
-        })
-        .sum()
+        .map(|p| p.weight() * f(width * p.position() + offset))
+        .sum::<f64>()
+        * width
 }
 
 #[cfg(feature = "parallel")]
@@ -280,15 +282,13 @@ pub fn par_glq_integrate<F>(start: f64, end: f64, f: F, points: NonZeroUsize) ->
 where
     F: Fn(f64) -> f64 + Send + Sync,
 {
-    let xs_and_ws = par_new_gauleg(points);
-    xs_and_ws
+    let width = (end - start) * 0.5;
+    let offset = (start + end) * 0.5;
+    par_new_gauleg(points)
         .into_par_iter()
-        .map(|p| {
-            0.5 * (end - start)
-                * p.weight()
-                * f(0.5 * (end - start) * p.position() + 0.5 * (start + end))
-        })
-        .sum()
+        .map(|p| p.weight() * f(width * p.position() + offset))
+        .sum::<f64>()
+        * width
 }
 
 #[cfg(test)]

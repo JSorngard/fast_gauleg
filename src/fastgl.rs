@@ -24,9 +24,9 @@ use crate::data::{CL, EVEN_THETA_ZEROS, EVEN_WEIGHTS, J1, JZ, ODD_THETA_ZEROS, O
 use core::{cmp::Ordering, num::NonZeroUsize};
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
-use std::f64::consts::PI;
 #[cfg(feature = "serde_support")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use std::f64::consts::PI;
 
 /// Generate a [`Vec`] of [`GlqPair`]s for manual integration.
 #[must_use = "the function returns a new value and does not modify the input"]

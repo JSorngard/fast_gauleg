@@ -1,9 +1,7 @@
 //! This crate contains tools for numerical integration with [Gauss-Legendre quadrature](https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_quadrature).
-//! This is a method that allows integration of polynomial functions using very few evaluation points.
-//! Non-polynomials will need more evaluation points, and the answer will be less accurate
-//! the less polynomial-like the given function is and the more it violates the degree bound.
+//! This is a method that allows integration of polynomial functions with very few evaluation points.
 //!
-//! The nodes and weights used during integration are computed using the method developed by
+//! The nodes and weights used during integration are computed with the fast and parallelizable method developed by
 //! [Ignace Bogaert](https://www.researchgate.net/publication/262672564_Iteration-Free_Computation_of_Gauss-Legendre_Quadrature_Nodes_and_Weights).
 //! # Examples
 //! Integrate a degree five polynomial while only evaluating it at three points:

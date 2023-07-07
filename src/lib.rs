@@ -1,4 +1,4 @@
-//! This crate contains tools for numerical integration using [Gauss-Legendre quadrature](https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_quadrature).
+//! This crate contains tools for numerical integration with [Gauss-Legendre quadrature](https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_quadrature).
 //! This is a method that allows integration of polynomial functions using very few evaluation points.
 //! Non-polynomials will need more evaluation points, and the answer will be less accurate
 //! the less polynomial-like the given function is and the more it violates the degree bound.

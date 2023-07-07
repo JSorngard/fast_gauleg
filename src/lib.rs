@@ -32,7 +32,12 @@
 //!     // while still passing the assertion.
 //!     epsilon = 1e-11,
 //! );
-//!```
+//! // For polynomials the accuracy can often be improved by using more points
+//! assert_relative_eq!(
+//!     glq_integrate(-5.0, 2.0, |x| 0.125 * (63.0 * x.powf(5.0) - 70.0 * x.powf(3.0) + 15.0 * x), 30.try_into().unwrap()),
+//!     -305781.0 / 16.0,
+//! );
+//! ```
 //! Integrate a trancendental function:
 //! ```
 //! # use approx::assert_relative_eq;

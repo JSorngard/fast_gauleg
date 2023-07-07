@@ -136,7 +136,8 @@ pub struct GlqIntegrator {
 }
 
 impl GlqIntegrator {
-    /// Creates a new integrator that integrates functions over the given domain.
+    /// Creates a new integrator that integrates functions using the given number
+    /// of evaluation points.
     #[must_use = "associated method returns a new instance and does not modify the input values"]
     pub fn new(points: NonZeroUsize) -> Self {
         let xs_and_ws = new_gauleg(points);

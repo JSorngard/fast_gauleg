@@ -201,6 +201,20 @@ impl GlqIntegrator {
         par_write_gauleg(&mut self.xs_and_ws);
         self.points = new_points;
     }
+
+    /// Converts self into a `Vec` of [`GlqPair`]s.
+    #[inline]
+    #[must_use = "`self` will be dropped if the result is not used"]
+    pub fn into_glq_pairs(self) -> Vec<GlqPair> {
+        self.xs_and_ws
+    }
+
+    /// Return a slice of the underlying [`GlqPair`]s.
+    #[inline]
+    #[must_use = "this method returns a new value and does not modify the original"]
+    pub fn as_glq_pairs(&self) -> &[GlqPair] {
+        &self.xs_and_ws
+    }
 }
 
 /// Integrates the given function over the interval `[start, end]`

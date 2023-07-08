@@ -1,25 +1,3 @@
-//! *******************************************
-//!    Copyright (C) 2014 by Ignace Bogaert   *
-//! *******************************************
-//! This software package is based on the paper
-//!    I. Bogaert, "Iteration-Free Computation of Gauss-Legendre Quadrature Nodes and Weights",
-//!    to be published in the SIAM Journal of Scientific Computing.
-//!
-//! The main features of this software are:
-//! - Speed: due to the simple formulas and the O(1) complexity computation of individual Gauss-Legendre
-//!   quadrature nodes and weights. This makes it compatible with parallel computing paradigms.
-//! - Accuracy: the error on the nodes and weights is within a few ulps (see the paper for details).
-//!
-//! Disclaimer:
-//! THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-//! WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR
-//! CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-//! BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-//! HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-//! OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//!
-//! This Rust implementation was written by Johanna Sörngård in 2023.
-
 use crate::data::{CL, EVEN_THETA_ZEROS, EVEN_WEIGHTS, J1, JZ, ODD_THETA_ZEROS, ODD_WEIGHTS};
 use core::{cmp::Ordering, num::NonZeroUsize};
 #[cfg(feature = "parallel")]
@@ -68,7 +46,7 @@ pub fn par_write_gauleg(points: &mut [GlqPair]) {
 /// This function computes the kth zero of the BesselJ(0,x)
 #[rustfmt::skip]
 #[must_use]
-fn besselj0_zero(k: usize) -> f64 {
+fn bessel_j0_zero(k: usize) -> f64 {
     if k > 20 {
         let z: f64 = PI * (k as f64 - 0.25);
         let r = 1.0 / z;
@@ -82,7 +60,7 @@ fn besselj0_zero(k: usize) -> f64 {
 /// This function computes BesselJ(1, kth zero of BesselJ(0, x))^2
 #[rustfmt::skip]
 #[must_use]
-fn besselj1_squared(k: usize) -> f64 {
+fn bessel_j1_squared(k: usize) -> f64 {
     if k > 21 {
         let x: f64 = 1.0 / (k as f64 - 0.25);
         let x2 = x * x;
@@ -139,26 +117,26 @@ impl QuadThetaWeightPair {
         if n < 101 {
             Self::gl_pair_tabulated(n, k - 1)
         } else if 2 * k - 1 > n {
-            let mut p = Self::gl_pair_s(n, n - k + 1);
+            let mut p = Self::gl_pair_computed(n, n - k + 1);
             p.theta = PI - p.theta;
             p
         } else {
-            Self::gl_pair_s(n, k)
+            Self::gl_pair_computed(n, k)
         }
     }
 
     /// Compute a node-weight pair, with k limited to half the range
     #[rustfmt::skip]
     #[must_use]
-    fn gl_pair_s(n: usize, k: usize) -> Self {
+    fn gl_pair_computed(n: usize, k: usize) -> Self {
         // First get the Bessel zero
         let w: f64 = 1.0 / (n as f64 + 0.5);
-        let nu = besselj0_zero(k);
+        let nu = bessel_j0_zero(k);
         let theta = w * nu;
         let x = theta * theta;
 
         // Get the asymptotic BesselJ(1, nu) squared
-        let b = besselj1_squared(k);
+        let b = bessel_j1_squared(k);
 
         // Get the Chebyshev interpolants for the nodes...
         let sf1t = (((((-1.290_529_962_742_805_1e-12 * x + 2.407_246_858_643_301_3e-10) * x - 3.131_486_546_359_920_4e-8) * x + 2.755_731_689_620_612_4e-6) * x - 1.488_095_237_139_091_4e-4) * x + 4.166_666_666_651_934e-3) * x - 4.166_666_666_666_63e-2;
@@ -178,8 +156,7 @@ impl QuadThetaWeightPair {
 
         // Finally compute the node and the weight
         let theta = w * (nu + theta * w_inv_sinc * (sf1t + wis2 * (sf2t + wis2 * sf3t)));
-        let deno = b_nu_o_sin + b_nu_o_sin * wis2 * (wsf1t + wis2 * (wsf2t + wis2 * wsf3t));
-        let weight = 2.0 * w / deno;
+        let weight = 2.0 * w / (b_nu_o_sin + b_nu_o_sin * wis2 * (wsf1t + wis2 * (wsf2t + wis2 * wsf3t)));
 
         Self { theta, weight }
     }
@@ -221,6 +198,7 @@ impl QuadThetaWeightPair {
 }
 
 impl core::convert::From<QuadThetaWeightPair> for GlqPair {
+    #[must_use = "`value` will be dropped if the result is not used"]
     fn from(value: QuadThetaWeightPair) -> Self {
         Self {
             position: value.theta.cos(),

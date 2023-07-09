@@ -70,7 +70,7 @@ fn bessel_j1_squared(k: usize) -> f64 {
     }
 }
 
-/// A node-weight pair used for manual integration.
+/// A Gauss-Legendre node-weight pair used for manual integration.
 /// # Example
 /// Integrate `f(x) = e^x` in the interval `[-1, 1]`.
 /// ```
@@ -104,17 +104,18 @@ pub struct GlqPair {
     weight: f64,
 }
 
-struct QuadThetaWeightPair {
+/// A Gauss-Legendre node-weight pair in theta space.
+struct GlqThetaWeightPair {
     theta: f64,
     weight: f64,
 }
 
-impl QuadThetaWeightPair {
+impl GlqThetaWeightPair {
     #[must_use]
     fn new(n: usize, k: usize) -> Self {
         assert!(k > 0);
         assert!(n >= k);
-        if n < 101 {
+        if n <= 100 {
             Self::gl_pair_tabulated(n, k - 1)
         } else if 2 * k - 1 > n {
             let mut p = Self::gl_pair_computed(n, n - k + 1);
@@ -197,9 +198,9 @@ impl QuadThetaWeightPair {
     }
 }
 
-impl core::convert::From<QuadThetaWeightPair> for GlqPair {
+impl core::convert::From<GlqThetaWeightPair> for GlqPair {
     #[must_use = "`value` will be dropped if the result is not used"]
-    fn from(value: QuadThetaWeightPair) -> Self {
+    fn from(value: GlqThetaWeightPair) -> Self {
         Self {
             position: value.theta.cos(),
             weight: value.weight,
@@ -213,7 +214,7 @@ impl GlqPair {
     /// Panics if `k = 0` or `n < k`.
     #[must_use = "the associated method returns a new GlqPair and does not modify the inputs"]
     pub fn new(n: usize, k: usize) -> Self {
-        QuadThetaWeightPair::new(n, k).into()
+        GlqThetaWeightPair::new(n, k).into()
     }
 
     /// Returns the x-position of the node.

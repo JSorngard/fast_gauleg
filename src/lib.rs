@@ -261,7 +261,7 @@ impl GlqIntegrator {
 
 /// Integrates the given function over the interval `[start, end]`
 /// using [Gauss-Legendre quadrature](https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_quadrature)
-/// with `points` evaluation points.
+/// with the given number of evaluation points.
 /// # Example
 /// ```
 /// # use gl_quadrature::glq_integrate;

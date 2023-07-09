@@ -3,9 +3,7 @@ This Rust implementation was written by Johanna Sörngård in 2023
 
 ---
 
-This software package is based on the paper
-   [I. Bogaert, "Iteration-Free Computation of Gauss-Legendre Quadrature Nodes and Weights"](https://doi.org/10.1137/140954969),
-   published in volume 36, issue 3 of the SIAM Journal of Scientific Computing in 2014 on pages A1008 - A1026.
+This software package is based on the paper ["Iteration-Free Computation of Gauss-Legendre Quadrature Nodes and Weights"](https://doi.org/10.1137/140954969) by I. Bogaert.
 
 The main features of this software are:
 - Speed: due to the simple formulas and the O(1) complexity computation of individual Gauss-Legendre 

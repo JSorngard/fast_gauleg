@@ -85,16 +85,36 @@
 //!     );
 //! }
 //! ```
+//! You can also use this crate to generate the nodes and weights if you wish to compute
+//! an integral manually
+//! ```
+//! # use approx::assert_relative_eq;
+//! # use gl_quadrature::glq_pairs;
+//! let f: fn(f64) -> f64 = |x| x.powf(4.0) * (1.0 - x).powf(4.0) / (1.0 + x * x);
+//! let start = 0.0;
+//! let end = 1.0;
+//! let width = (end - start) * 0.5;
+//! let offset = (start + end) * 0.5;
+//! let res: f64 = glq_pairs(13.try_into().unwrap())
+//!     .into_iter()
+//!     .map(|pair| width * pair.weight() * f(width * pair.position() + offset))
+//!     .sum();
+//! assert_relative_eq!(res, 22.0 / 7.0 - std::f64::consts::PI);
+//! ```
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 #[rustfmt::skip]
 mod data;
 mod glq_nodes_and_weights;
-pub use glq_nodes_and_weights::GlqPair;
-use glq_nodes_and_weights::{new_gauleg, write_gauleg};
+pub use glq_nodes_and_weights::glq_pairs;
 #[cfg(feature = "parallel")]
-use glq_nodes_and_weights::{par_new_gauleg, par_write_gauleg};
+#[cfg_attr(docsrs, doc(cfg(feature = "parallel")))]
+pub use glq_nodes_and_weights::par_glq_pairs;
+#[cfg(feature = "parallel")]
+use glq_nodes_and_weights::par_write_glq_pairs;
+use glq_nodes_and_weights::write_glq_pairs;
+pub use glq_nodes_and_weights::GlqPair;
 
 use core::num::NonZeroUsize;
 
@@ -148,7 +168,7 @@ impl GlqIntegrator {
     /// of evaluation points.
     #[must_use = "associated method returns a new instance and does not modify the input value"]
     pub fn new(points: NonZeroUsize) -> Self {
-        let xs_and_ws = new_gauleg(points);
+        let xs_and_ws = glq_pairs(points);
         Self { xs_and_ws, points }
     }
 
@@ -157,7 +177,7 @@ impl GlqIntegrator {
     /// Same as [`new`](GlqIntegrator::new) but parallel.
     #[must_use = "associated method returns a new instance and does not modify the input value"]
     pub fn par_new(points: NonZeroUsize) -> Self {
-        let xs_and_ws = par_new_gauleg(points);
+        let xs_and_ws = par_glq_pairs(points);
         Self { xs_and_ws, points }
     }
 
@@ -211,7 +231,7 @@ impl GlqIntegrator {
     /// If the number is not increased the old allocation is reused.
     pub fn change_number_of_points(&mut self, new_points: NonZeroUsize) {
         self.xs_and_ws.resize(new_points.into(), GlqPair::default());
-        write_gauleg(&mut self.xs_and_ws);
+        write_glq_pairs(&mut self.xs_and_ws);
         self.points = new_points;
     }
 
@@ -220,7 +240,7 @@ impl GlqIntegrator {
     /// Same as [`change_number_of_points`](GlqIntegrator::change_number_of_points) but parallel.
     pub fn par_change_number_of_points(&mut self, new_points: NonZeroUsize) {
         self.xs_and_ws.resize(new_points.into(), GlqPair::default());
-        par_write_gauleg(&mut self.xs_and_ws);
+        par_write_glq_pairs(&mut self.xs_and_ws);
         self.points = new_points;
     }
 
@@ -271,7 +291,7 @@ where
 {
     let width = (end - start) * 0.5;
     let offset = (start + end) * 0.5;
-    new_gauleg(points)
+    glq_pairs(points)
         .into_iter()
         .map(|p| p.weight() * f(width * p.position() + offset))
         .sum::<f64>()
@@ -288,7 +308,7 @@ where
 {
     let width = (end - start) * 0.5;
     let offset = (start + end) * 0.5;
-    par_new_gauleg(points)
+    par_glq_pairs(points)
         .into_par_iter()
         .map(|p| p.weight() * f(width * p.position() + offset))
         .sum::<f64>()

@@ -11,8 +11,19 @@ use rayon::iter::{
 use serde::{Deserialize, Serialize};
 
 /// Generate a [`Vec`] of [`GlqPair`]s for manual integration.
+/// # Example
+/// ```
+/// # use gl_quadrature::glq_pairs;
+/// # use approx::assert_relative_eq;
+/// let f: fn(f64) -> f64 = |x| 2.0 * x * x + 1.0;
+/// let res: f64 = glq_pairs(3.try_into().unwrap())
+///     .into_iter()
+///     .map(|pair| 0.5 * pair.weight() * f(0.5 * pair.position() + 0.5))
+///     .sum();
+/// assert_relative_eq!(res, 2.0 / 3.0 + 1.0);
+/// ```
 #[must_use = "the function returns a new value and does not modify the input"]
-pub fn new_gauleg(points: NonZeroUsize) -> Vec<GlqPair> {
+pub fn glq_pairs(points: NonZeroUsize) -> Vec<GlqPair> {
     (1..=points.get())
         .map(|k| GlqPair::new(points.into(), k))
         .collect()
@@ -20,7 +31,7 @@ pub fn new_gauleg(points: NonZeroUsize) -> Vec<GlqPair> {
 
 /// Writes [`GlqPair`]s to an already allocated slice for manual integration.
 /// Does nothing if the slice is empty.
-pub fn write_gauleg(points: &mut [GlqPair]) {
+pub fn write_glq_pairs(points: &mut [GlqPair]) {
     let l = points.len();
     for (i, point) in points.iter_mut().enumerate() {
         *point = GlqPair::new(l, i + 1);
@@ -28,9 +39,9 @@ pub fn write_gauleg(points: &mut [GlqPair]) {
 }
 
 #[cfg(feature = "parallel")]
-/// Same as [`new_gauleg`] but parallel.
+/// Same as [`glq_pairs`] but parallel.
 #[must_use = "the function returns a new value and does not modify the input"]
-pub fn par_new_gauleg(points: NonZeroUsize) -> Vec<GlqPair> {
+pub fn par_glq_pairs(points: NonZeroUsize) -> Vec<GlqPair> {
     (1..=points.get())
         .into_par_iter()
         .map(|k| GlqPair::new(points.into(), k))
@@ -38,8 +49,8 @@ pub fn par_new_gauleg(points: NonZeroUsize) -> Vec<GlqPair> {
 }
 
 #[cfg(feature = "parallel")]
-/// Same as [`write_gauleg`] but parallel.
-pub fn par_write_gauleg(points: &mut [GlqPair]) {
+/// Same as [`write_glq_pairs`] but parallel.
+pub fn par_write_glq_pairs(points: &mut [GlqPair]) {
     let l = points.len();
     points
         .par_iter_mut()

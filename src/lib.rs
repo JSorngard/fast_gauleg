@@ -1,6 +1,6 @@
 //! This crate contains tools for numerical integration with [Gauss-Legendre quadrature](https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_quadrature).
 //! This is a method that allows integration of polynomial functions with very few evaluation points. A quadrature rule that uses `n` points
-//! can integrate `2n - 1` degree polynomials exactly.
+//! can integrate polynomials of degree `2n - 1` exactly.
 //!
 //! The nodes and weights used during integration are computed with the fast and parallelizable method developed by
 //! [Ignace Bogaert](https://doi.org/10.1137/140954969).

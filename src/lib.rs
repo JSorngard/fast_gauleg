@@ -85,11 +85,11 @@
 
 #[rustfmt::skip]
 mod data;
-mod fastgl;
-pub use fastgl::GlqPair;
-use fastgl::{new_gauleg, write_gauleg};
+mod glq_nodes_and_weights;
+pub use glq_nodes_and_weights::GlqPair;
+use glq_nodes_and_weights::{new_gauleg, write_gauleg};
 #[cfg(feature = "parallel")]
-use fastgl::{par_new_gauleg, par_write_gauleg};
+use glq_nodes_and_weights::{par_new_gauleg, par_write_gauleg};
 
 use core::num::NonZeroUsize;
 

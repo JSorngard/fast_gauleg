@@ -138,7 +138,7 @@ impl core::convert::From<GlqThetaWeightPair> for GlqPair {
     }
 }
 
-/// A Gauss-Legendre node-weight pair in theta space.
+/// A Gauss-Legendre node-weight pair in theta-space.
 struct GlqThetaWeightPair {
     theta: f64,
     weight: f64,
@@ -201,7 +201,6 @@ impl GlqThetaWeightPair {
     fn gl_pair_tabulated(l: usize, k: usize) -> Self {
         // Odd Legendre degree
         let (theta, weight) = if l % 2 == 1 {
-            // originally l & 1
             let l2 = (l - 1) / 2;
             match k.cmp(&l2) {
                 Ordering::Equal => (PI / 2.0, 2.0 / (CL[l] * CL[l])),

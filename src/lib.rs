@@ -52,19 +52,19 @@
 //! assert_relative_eq!(
 //!     glq_integrate(0.0, 1.0, |x| x.ln(), 10.try_into().unwrap()),
 //!     -1.0,
-//!     epsilon = 1e-2,
+//!     epsilon = 1e-2, // Not that good accuracy
 //! );
 //! assert_relative_eq!(
 //!     glq_integrate(0.0, 1.0, |x| x.ln(), 1_000_000.try_into().unwrap()),
 //!     -1.0,
-//!     epsilon = 1e-12,
+//!     epsilon = 1e-12, // Much better
 //! );
 //! // Very large calculations can be done in parallel (needs the `parallel` feature)
 //! # #[cfg(feature = "parallel")]
 //! assert_relative_eq!(
 //!     par_glq_integrate(0.0, 1.0, |x| x.ln(), 100_000_000.try_into().unwrap()),
 //!     -1.0,
-//!     epsilon = 1e-15,
+//!     epsilon = 1e-15, // Even better!
 //! );
 //! ```
 //! If many integrals need to be computed the crate provides [`GlqIntegrator`], which reuses

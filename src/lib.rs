@@ -94,7 +94,7 @@ use glq_nodes_and_weights::{par_new_gauleg, par_write_gauleg};
 use core::num::NonZeroUsize;
 
 #[cfg(feature = "parallel")]
-use rayon::prelude::*;
+use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
 #[cfg(feature = "serde_support")]
 use serde::{Deserialize, Serialize};
 

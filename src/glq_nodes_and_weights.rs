@@ -4,7 +4,9 @@ use core::{cmp::Ordering, num::NonZeroUsize};
 use std::f64::consts::PI;
 
 #[cfg(feature = "parallel")]
-use rayon::prelude::*;
+use rayon::iter::{
+    IndexedParallelIterator, IntoParallelIterator, IntoParallelRefMutIterator, ParallelIterator,
+};
 #[cfg(feature = "serde_support")]
 use serde::{Deserialize, Serialize};
 

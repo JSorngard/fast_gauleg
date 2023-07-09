@@ -85,13 +85,6 @@
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-use core::num::NonZeroUsize;
-
-#[cfg(feature = "parallel")]
-use rayon::prelude::*;
-#[cfg(feature = "serde_support")]
-use serde::{Deserialize, Serialize};
-
 #[rustfmt::skip]
 mod data;
 mod fastgl;
@@ -99,6 +92,13 @@ pub use fastgl::GlqPair;
 use fastgl::{new_gauleg, write_gauleg};
 #[cfg(feature = "parallel")]
 use fastgl::{par_new_gauleg, par_write_gauleg};
+
+use core::num::NonZeroUsize;
+
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
+#[cfg(feature = "serde_support")]
+use serde::{Deserialize, Serialize};
 
 /// An object that can integrate `Fn(f64) -> f64` functions and closures.
 /// # Examples

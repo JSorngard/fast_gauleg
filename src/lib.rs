@@ -143,7 +143,7 @@ pub struct GlqIntegrator {
 impl GlqIntegrator {
     /// Creates a new integrator that integrates functions using the given number
     /// of evaluation points.
-    #[must_use = "associated method returns a new instance and does not modify the input values"]
+    #[must_use = "associated method returns a new instance and does not modify the input value"]
     pub fn new(points: NonZeroUsize) -> Self {
         let xs_and_ws = new_gauleg(points);
         Self { xs_and_ws, points }
@@ -152,7 +152,7 @@ impl GlqIntegrator {
     #[cfg(feature = "parallel")]
     #[cfg_attr(docsrs, doc(cfg(feature = "parallel")))]
     /// Same as [`new`](GlqIntegrator::new) but parallel.
-    #[must_use = "associated method returns a new instance and does not modify the input values"]
+    #[must_use = "associated method returns a new instance and does not modify the input value"]
     pub fn par_new(points: NonZeroUsize) -> Self {
         let xs_and_ws = par_new_gauleg(points);
         Self { xs_and_ws, points }
@@ -191,7 +191,7 @@ impl GlqIntegrator {
     }
 
     /// Returns the number of points in the integration domain
-    #[must_use = "the method returns a value and does not modify `self` or its inputs"]
+    #[must_use = "the method returns a value and does not modify `self`"]
     #[inline(always)]
     pub const fn points(&self) -> NonZeroUsize {
         self.points

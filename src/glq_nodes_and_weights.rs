@@ -47,6 +47,7 @@ pub fn par_write_gauleg(points: &mut [GlqPair]) {
 
 /// This function computes the kth zero of the BesselJ(0,x)
 #[rustfmt::skip]
+#[inline]
 #[must_use]
 fn bessel_j0_zero(k: usize) -> f64 {
     if k > 20 {
@@ -61,6 +62,7 @@ fn bessel_j0_zero(k: usize) -> f64 {
 
 /// This function computes BesselJ(1, kth zero of BesselJ(0, x))^2
 #[rustfmt::skip]
+#[inline]
 #[must_use]
 fn bessel_j1_squared(k: usize) -> f64 {
     if k > 21 {

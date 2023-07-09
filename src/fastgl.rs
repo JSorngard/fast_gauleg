@@ -1,10 +1,12 @@
 use crate::data::{CL, EVEN_THETA_ZEROS, EVEN_WEIGHTS, J1, JZ, ODD_THETA_ZEROS, ODD_WEIGHTS};
+
 use core::{cmp::Ordering, num::NonZeroUsize};
+use std::f64::consts::PI;
+
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 #[cfg(feature = "serde_support")]
 use serde::{Deserialize, Serialize};
-use std::f64::consts::PI;
 
 /// Generate a [`Vec`] of [`GlqPair`]s for manual integration.
 #[must_use = "the function returns a new value and does not modify the input"]
@@ -145,6 +147,9 @@ struct GlqThetaWeightPair {
 }
 
 impl GlqThetaWeightPair {
+    /// Compute a new GlqPair in theta-space
+    /// # Panic
+    /// Panics if `k = 0` or `n < k`.
     #[must_use]
     fn new(n: usize, k: usize) -> Self {
         assert!(k > 0);

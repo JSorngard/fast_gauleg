@@ -203,7 +203,7 @@ impl GlqThetaWeightPair {
         Self { theta, weight }
     }
 
-    /// Returns tabulated theta and weight values: valid for l <= 100
+    /// Returns tabulated theta and weight values, valid for l <= 100
     #[must_use]
     fn gl_pair_tabulated(l: usize, k: usize) -> Self {
         // Odd Legendre degree

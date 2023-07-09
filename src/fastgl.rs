@@ -104,6 +104,40 @@ pub struct GlqPair {
     weight: f64,
 }
 
+impl GlqPair {
+    /// Returns the `k`th node-weight pair associated with the `n`-node quadrature.
+    /// # Panic
+    /// Panics if `k = 0` or `n < k`.
+    #[must_use = "the associated method returns a new GlqPair and does not modify the inputs"]
+    pub fn new(n: usize, k: usize) -> Self {
+        GlqThetaWeightPair::new(n, k).into()
+    }
+
+    /// Returns the x-position of the node.
+    #[inline]
+    #[must_use = "the method returns a value and does not modify `self`"]
+    pub const fn position(&self) -> f64 {
+        self.position
+    }
+
+    /// Returns the weight of the node.
+    #[inline]
+    #[must_use = "the method returns a value and does not modify `self`"]
+    pub const fn weight(&self) -> f64 {
+        self.weight
+    }
+}
+
+impl core::convert::From<GlqThetaWeightPair> for GlqPair {
+    #[must_use = "`value` will be dropped if the result is not used"]
+    fn from(value: GlqThetaWeightPair) -> Self {
+        Self {
+            position: value.theta.cos(),
+            weight: value.weight,
+        }
+    }
+}
+
 /// A Gauss-Legendre node-weight pair in theta space.
 struct GlqThetaWeightPair {
     theta: f64,
@@ -195,40 +229,6 @@ impl GlqThetaWeightPair {
             }
         };
         Self { theta, weight }
-    }
-}
-
-impl core::convert::From<GlqThetaWeightPair> for GlqPair {
-    #[must_use = "`value` will be dropped if the result is not used"]
-    fn from(value: GlqThetaWeightPair) -> Self {
-        Self {
-            position: value.theta.cos(),
-            weight: value.weight,
-        }
-    }
-}
-
-impl GlqPair {
-    /// Returns the `k`th node-weight pair associated with the `n`-node quadrature.
-    /// # Panic
-    /// Panics if `k = 0` or `n < k`.
-    #[must_use = "the associated method returns a new GlqPair and does not modify the inputs"]
-    pub fn new(n: usize, k: usize) -> Self {
-        GlqThetaWeightPair::new(n, k).into()
-    }
-
-    /// Returns the x-position of the node.
-    #[inline]
-    #[must_use = "the method returns a value and does not modify `self`"]
-    pub const fn position(&self) -> f64 {
-        self.position
-    }
-
-    /// Returns the weight of the node.
-    #[inline]
-    #[must_use = "the method returns a value and does not modify `self`"]
-    pub const fn weight(&self) -> f64 {
-        self.weight
     }
 }
 

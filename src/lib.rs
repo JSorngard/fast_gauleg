@@ -4,7 +4,7 @@
 //! The nodes and weights used during integration are computed with the fast and parallelizable method developed by
 //! [Ignace Bogaert](https://www.researchgate.net/publication/262672564_Iteration-Free_Computation_of_Gauss-Legendre_Quadrature_Nodes_and_Weights).
 //! # Examples
-//! Integrate a degree five polynomial while only evaluating it at three points:
+//! Integrate degree five polynomials while only evaluating them at three points:
 //! ```
 //! use gl_quadrature::glq_integrate;
 //! // This macro is used in the docs of this crate to compare floating point values.
@@ -15,12 +15,10 @@
 //!
 //! let pts = NonZeroUsize::new(3).unwrap();
 //!
-//! // Check the orthogonality of Legendre polynomials of degree 2 and 3:
 //! assert_relative_eq!(
 //!     glq_integrate(-1.0, 1.0, |x| 0.25 * (3.0 * x.powf(2.0) - 1.0) * (5.0 * x.powf(3.0) - 3.0 * x), pts),
 //!     0.0,
 //! );
-//! // Integrating more complicated polynomials or integrating outside [-1, 1] can reduce accuracy
 //! assert_relative_eq!(
 //!     glq_integrate(-5.0, 2.0, |x| 0.125 * (63.0 * x.powf(5.0) - 70.0 * x.powf(3.0) + 15.0 * x), pts),
 //!     -305781.0 / 16.0,
@@ -64,7 +62,7 @@
 //!     epsilon = 1e-15,
 //! );
 //! ```
-//! If many integrations need to be done the crate provides [`GlqIntegrator`], which reuses
+//! If many integrals need to be computed the crate provides [`GlqIntegrator`], which reuses
 //! the calculation of the quadrature nodes and weights:
 //! ```
 //! # use approx::assert_relative_eq;

@@ -1,7 +1,7 @@
-****************************************************************
 Original C++ code: Copyright (C) 2014 by Ignace Bogaert  
 This Rust implementation was written by Johanna Sörngård in 2023 
-****************************************************************
+
+---
 
 This software package is based on the paper
    [I. Bogaert, "Iteration-Free Computation of Gauss-Legendre Quadrature Nodes and Weights"](https://doi.org/10.1137/140954969),

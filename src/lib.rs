@@ -16,6 +16,10 @@
 //! let pts = NonZeroUsize::new(3).unwrap();
 //!
 //! assert_relative_eq!(
+//!     glq_integrate(0.0, 1.0, |x| x * x, pts),
+//!     1.0 / 3.0,
+//! );
+//! assert_relative_eq!(
 //!     glq_integrate(-1.0, 1.0, |x| 0.25 * (3.0 * x.powf(2.0) - 1.0) * (5.0 * x.powf(3.0) - 3.0 * x), pts),
 //!     0.0,
 //! );

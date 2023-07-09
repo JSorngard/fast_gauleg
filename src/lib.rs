@@ -161,6 +161,13 @@ impl GlqIntegrator {
         Self { xs_and_ws, points }
     }
 
+    /// Returns a slice of the node-weight pairs used during integration.
+    #[must_use = "the methods returns a value and does not modify `self`"]
+    #[inline]
+    pub fn node_weight_pairs(&self) -> &[GlqPair] {
+        &self.xs_and_ws
+    }
+
     /// Integrates the given function over the given domain.
     #[must_use = "the method returns a new value and does not modify `self` or the inputs"]
     pub fn integrate<F>(&self, start: f64, end: f64, f: F) -> f64

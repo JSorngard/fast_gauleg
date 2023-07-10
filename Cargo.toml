@@ -1,8 +1,8 @@
 [package]
-name = "gl_quadrature"
+name = "fast_gauleg"
 version = "0.1.0"
 edition = "2021"
-description = "Numerical integration with Gauss-Legendre quadrature"
+description = "Numerical integration with Gauss-Legendre quadrature. Evaluates node-weight pairs in O(1) time complexity, and optionally in parallel"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

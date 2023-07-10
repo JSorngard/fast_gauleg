@@ -13,7 +13,7 @@
 //! # Examples
 //! Integrate degree five polynomials while only evaluating them at three points:
 //! ```
-//! use gl_quadrature::glq_integrate;
+//! use fast_gauleg::glq_integrate;
 //! // This macro is used in the docs of this crate to compare floating point values.
 //! // The assertion succeeds if the two values are within floating point error of each other,
 //! // or their relative difference is within an optional epsilon.
@@ -42,7 +42,7 @@
 //! Integrate a trancendental function:
 //! ```
 //! # use approx::assert_relative_eq;
-//! # use gl_quadrature::glq_integrate;
+//! # use fast_gauleg::glq_integrate;
 //! assert_relative_eq!(
 //!     glq_integrate(0.0, 1.0, |x| (x + 1.0).ln().sin(), 10.try_into().unwrap()),
 //!     0.5 - f64::ln(2.0).cos() + f64::ln(2.0).sin(),
@@ -52,9 +52,9 @@
 //! Integration with many points can compensate for this, and is still fast
 //! ```
 //! # use approx::assert_relative_eq;
-//! # use gl_quadrature::glq_integrate;
+//! # use fast_gauleg::glq_integrate;
 //! # #[cfg(feature = "parallel")]
-//! # use gl_quadrature::par_glq_integrate;
+//! # use fast_gauleg::par_glq_integrate;
 //! assert_relative_eq!(
 //!     glq_integrate(0.0, 1.0, |x| x.ln(), 10.try_into().unwrap()),
 //!     -1.0,
@@ -77,7 +77,7 @@
 //! the calculation of the quadrature nodes and weights:
 //! ```
 //! # use approx::assert_relative_eq;
-//! use gl_quadrature::GlqIntegrator;
+//! use fast_gauleg::GlqIntegrator;
 //! let integrator = GlqIntegrator::new(10.try_into().unwrap());
 //! assert_relative_eq!(
 //!     integrator.integrate(0.0, 2.0 * std::f64::consts::PI, |theta| theta.sin() * theta.cos()),
@@ -95,7 +95,7 @@
 //! an integral manually
 //! ```
 //! # use approx::assert_relative_eq;
-//! # use gl_quadrature::glq_pairs;
+//! # use fast_gauleg::glq_pairs;
 //! let f: fn(f64) -> f64 = |x| x.powf(4.0) * (1.0 - x).powf(4.0) / (1.0 + x * x);
 //! let start = 0.0;
 //! let end = 1.0;
@@ -133,7 +133,7 @@ use serde::{Deserialize, Serialize};
 /// # Examples
 /// Integrate degree 5 polynomials with only 3 evaluation points:
 /// ```
-/// # use gl_quadrature::GlqIntegrator;
+/// # use fast_gauleg::GlqIntegrator;
 /// use approx::assert_relative_eq;
 /// let integrator = GlqIntegrator::new(3.try_into().unwrap());
 /// assert_relative_eq!(
@@ -147,7 +147,7 @@ use serde::{Deserialize, Serialize};
 /// ```
 /// Non-polynomial functions need more points to evaluate correctly
 /// ```
-/// # use gl_quadrature::GlqIntegrator;
+/// # use fast_gauleg::GlqIntegrator;
 /// # use approx::assert_relative_eq;
 /// let mut integrator = GlqIntegrator::new(3.try_into().unwrap());
 /// assert_relative_eq!(
@@ -270,7 +270,7 @@ impl GlqIntegrator {
 /// with the given number of evaluation points.
 /// # Example
 /// ```
-/// # use gl_quadrature::glq_integrate;
+/// # use fast_gauleg::glq_integrate;
 /// use approx::assert_relative_eq;
 /// use core::num::NonZeroUsize;
 /// // Integrate degree 2 and 3 polynomials with only 2 points:

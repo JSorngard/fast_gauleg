@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// by their x-position.
 /// # Example
 /// ```
-/// # use gl_quadrature::glq_pairs;
+/// # use fast_gauleg::glq_pairs;
 /// # use approx::assert_relative_eq;
 /// let f: fn(f64) -> f64 = |x| 2.0 * x * x + 1.0;
 /// let res: f64 = glq_pairs(3.try_into().unwrap())
@@ -92,7 +92,7 @@ fn bessel_j1_squared(k: usize) -> f64 {
 /// # Example
 /// Integrate `f(x) = e^x` in the interval `[-1, 1]`.
 /// ```
-/// # use gl_quadrature::GlqPair;
+/// # use fast_gauleg::GlqPair;
 /// let n = 9;
 /// assert_eq!(
 ///     (1..=n).map(|k| {
@@ -104,7 +104,7 @@ fn bessel_j1_squared(k: usize) -> f64 {
 /// ```
 /// Integrate `f(x) = x^2 - x - 1` in the interval `[0, 1]`.
 /// ```
-/// # use gl_quadrature::GlqPair;
+/// # use fast_gauleg::GlqPair;
 /// let n = 3;
 /// let f = |x| x * x - x - 1.0;
 /// assert_eq!(

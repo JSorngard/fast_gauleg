@@ -10,7 +10,8 @@ use rayon::iter::{
 #[cfg(feature = "serde_support")]
 use serde::{Deserialize, Serialize};
 
-/// Generate a [`Vec`] of [`GlqPair`]s for manual integration.
+/// Generate a [`Vec`] of [`GlqPair`]s for manual integration. The pairs are ordered
+/// by their x-position.
 /// # Example
 /// ```
 /// # use gl_quadrature::glq_pairs;

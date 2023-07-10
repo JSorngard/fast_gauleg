@@ -3,7 +3,13 @@
 //! can integrate polynomials of degree `2n - 1` exactly.
 //!
 //! The nodes and weights used during integration are computed with the fast and parallelizable method developed by
-//! [Ignace Bogaert](https://doi.org/10.1137/140954969).
+//! [Ignace Bogaert](https://doi.org/10.1137/140954969),
+//! which are accurate to within `f64` machine epsilon for any `n > 21` and
+//! allows for the computation of nodes and weights with `n` exceeding one billion.
+//! 
+//! Use [`GlqPair`] to compute an arbitrary node-weight pair with O(1) time complexity,
+//! and [`glq_pairs`] to compute all node-weight pairs of a given order.
+//! Compute integrals with [`glq_integrate`] reuse node-weight computation with [`GlqIntegrator`].
 //! # Examples
 //! Integrate degree five polynomials while only evaluating them at three points:
 //! ```

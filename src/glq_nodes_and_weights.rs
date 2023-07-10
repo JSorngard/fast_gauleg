@@ -143,6 +143,8 @@ impl GlqPair {
     pub const fn weight(&self) -> f64 {
         self.weight
     }
+
+    
 }
 
 impl core::convert::From<GlqThetaWeightPair> for GlqPair {

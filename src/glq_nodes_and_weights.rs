@@ -130,14 +130,14 @@ impl GlqPair {
         GlqThetaWeightPair::new(n, k).into()
     }
 
-    /// Returns the x-position of the node.
+    /// Returns the x-position.
     #[inline]
     #[must_use = "the method returns a value and does not modify `self`"]
     pub const fn position(&self) -> f64 {
         self.position
     }
 
-    /// Returns the weight of the node.
+    /// Returns the weight.
     #[inline]
     #[must_use = "the method returns a value and does not modify `self`"]
     pub const fn weight(&self) -> f64 {

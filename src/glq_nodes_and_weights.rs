@@ -24,9 +24,9 @@ use serde::{Deserialize, Serialize};
 /// assert_relative_eq!(res, 2.0 / 3.0 + 1.0);
 /// ```
 #[must_use = "the function returns a new value and does not modify the input"]
-pub fn glq_pairs(points: NonZeroUsize) -> Vec<GlqPair> {
-    (1..=points.get())
-        .map(|k| GlqPair::new(points.into(), k))
+pub fn glq_pairs(nodes: NonZeroUsize) -> Vec<GlqPair> {
+    (1..=nodes.get())
+        .map(|k| GlqPair::new(nodes.into(), k))
         .collect()
 }
 
@@ -123,7 +123,7 @@ pub struct GlqPair {
 }
 
 impl GlqPair {
-    /// Returns the `k`th node-weight pair associated with the `n`-node quadrature.
+    /// Returns the `k`th node-weight pair associated with the `n`-node quadrature rule.
     /// # Panic
     /// Panics if `k = 0` or `n < k`.
     #[must_use = "the associated method returns a new GlqPair and does not modify the inputs"]

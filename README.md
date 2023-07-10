@@ -4,7 +4,7 @@ A crate for numerical integration with [Gauss-Legendre quadrature](https://en.wi
 
 The integrals are computed with the formula  
 ![integral_approximation](readme_images/integral_approx.svg)  
-where `n` is a chosen integer, and `w_n` and `x_n` are specific numbers derived from the zeros of Legendre polynomials.
+where `n` is a chosen integer, `a` and `b` are finite numbers, and `w_n` and `x_n` are specific numbers derived from the zeros of Legendre polynomials.
 
 
 # Examples

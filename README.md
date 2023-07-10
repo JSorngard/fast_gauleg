@@ -1,10 +1,6 @@
 # fast_gauleg
 
-A crate for numerical integration with [Gauss-Legendre quadrature](https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_quadrature).
-This technique allows for the computation of integrals of polynomials with very few evaluation points, and can be used for non-polynomials as well at possibly reduced accuracy.
-A quadrature rule with `n` points can integrate polynomials of degree `2n - 1` exactly.
-
-This crate is based on the paper ["Iteration-Free Computation of Gauss-Legendre Quadrature Nodes and Weights"](https://doi.org/10.1137/140954969) by I. Bogaert, which enables computation of node-weight pairs in O(1) time complexity and optionally in parallel.
+A crate for numerical integration with [Gauss-Legendre quadrature](https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_quadrature). This technique allows for the computation of integrals of polynomials with very few evaluation points, and can be used for non-polynomials as well at possibly reduced accuracy. This crate uses the method described in the paper ["Iteration-Free Computation of Gauss-Legendre Quadrature Nodes and Weights"](https://doi.org/10.1137/140954969) by I. Bogaert which enables computation of node-weight pairs in O(1) time complexity (and optionally in parallel) while maintaining an accuracy of a few ulps (see paper for details).
 
 # Examples
 
@@ -24,4 +20,12 @@ assert_relative_eq!(
     par_glq_integrate(0.0, 1.0, |x| x.ln(), 100_000_000.try_into().unwrap()),
     -1.0
 );
+```
+This is because the computation of individual node-weight pairs is O(1)
+```rust
+use fast_gauleg::GlqPair;
+// This:
+let a = GlqPair::new(1_000_000_000, 500_000_000);
+// Is as fast as this:
+let b = GlqPair::new(24, 12);
 ```

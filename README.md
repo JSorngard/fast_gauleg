@@ -1,6 +1,11 @@
 # fast_gauleg
 
-A crate for numerical integration with [Gauss-Legendre quadrature](https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_quadrature). This technique allows for the computation of integrals of polynomials with very few evaluation points, and can be used for non-polynomials as well at possibly reduced accuracy. This crate uses the method described in the paper ["Iteration-Free Computation of Gauss-Legendre Quadrature Nodes and Weights"](https://doi.org/10.1137/140954969) by I. Bogaert which enables computation of node-weight pairs in O(1) time complexity (and optionally in parallel) while maintaining an accuracy of a few ulps (see paper for details).
+A crate for numerical integration with [Gauss-Legendre quadrature](https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_quadrature). This technique allows for the computation of integrals of polynomials with very few evaluation points, and can be used for non-polynomials as well at possibly reduced accuracy. This crate uses the method described in the paper ["Iteration-Free Computation of Gauss-Legendre Quadrature Nodes and Weights"](https://doi.org/10.1137/140954969) by I. Bogaert which enables computation of node-weight pairs in O(1) time complexity (and optionally in parallel) while maintaining an accuracy of a few ulps in the nodes and weights (see paper for details).
+
+The integrals are computed with the formula  
+![integral_approximation](readme_images/integral_approx.svg)  
+where `n` is a chosen integer, and `w_n` and `x_n` are specific numbers derived from the zeros of Legendre polynomials.
+
 
 # Examples
 

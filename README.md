@@ -14,7 +14,7 @@ use fast_gauleg::glq_integrate;
 use approx::assert_relative_eq;
 
 assert_relative_eq!(
-    glq_integrate(-1.0, 1.0, |x| 0.125 * (63.0 * x.powf(5.0) - 73.0 * x.powf(3.0) + 15.0 * x), 3.try_into().unwrap()),
+    glq_integrate(-1.0, 1.0, |x| x.powf(5.0), 3.try_into().unwrap()),
     0.0,
 );
 ```

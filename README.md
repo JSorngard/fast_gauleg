@@ -5,3 +5,23 @@ This technique allows for the computation of integrals of polynomials with very 
 A quadrature rule with `n` points can integrate polynomials of degree `2n - 1` exactly.
 
 This crate is based on the paper ["Iteration-Free Computation of Gauss-Legendre Quadrature Nodes and Weights"](https://doi.org/10.1137/140954969) by I. Bogaert. This computation method allows for the computation of node-weight pairs in O(1) time complexity, and optionally in parallel.
+
+# Examples
+
+Integrate a degree 5 polynomial while only evaluating it at three points:
+```rust
+use fast_gauleg::glq_integrate;
+use approx::assert_relative_eq;
+
+assert_relative_eq!(
+    glq_integrate(-1.0, 1.0, |x| 0.25 * (3.0 * x.powf(2.0) - 1.0) * (5.0 * x.powf(3.0) - 3.0 * x), 3.try_into().unwrap()),
+    0.0,
+);
+```
+Very large quadrature rules are feasible, and can be evaluated in parallel:
+```rust
+assert_relative_eq!(
+    par_glq_integrate(0.0, 1.0, |x| x.ln(), 100_000_000.try_into().unwrap()),
+    -1.0
+);
+```

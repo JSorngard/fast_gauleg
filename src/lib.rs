@@ -6,10 +6,11 @@
 //! [Ignace Bogaert](https://doi.org/10.1137/140954969),
 //! which are accurate to within `f64` machine epsilon for any `n > 21` and
 //! allows for the computation of nodes and weights with `n` exceeding one billion.
-//! 
+//!
 //! Use [`GlqPair::new`](GlqPair) to compute an arbitrary node-weight pair with O(1) time complexity,
 //! and [`glq_pairs`] to compute all node-weight pairs of a given order.
 //! Compute integrals with [`glq_integrate`] and reuse node-weight computations with [`GlqIntegrator`].
+//! The computation of node-weight pairs and integrals can be done in parallel by enabling the feature `parallel`.
 //! # Examples
 //! Integrate degree five polynomials while only evaluating them at three points:
 //! ```
@@ -113,6 +114,7 @@
 #[rustfmt::skip]
 mod data;
 mod glq_nodes_and_weights;
+
 pub use glq_nodes_and_weights::glq_pairs;
 #[cfg(feature = "parallel")]
 #[cfg_attr(docsrs, doc(cfg(feature = "parallel")))]

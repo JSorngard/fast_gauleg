@@ -169,7 +169,7 @@ impl GlqThetaWeightPair {
     /// Panics if `k = 0` or `n < k`.
     #[must_use]
     fn new(n: usize, k: usize) -> Self {
-        assert!(k > 0);
+        assert_ne!(k, 0);
         assert!(n >= k);
         if n <= 100 {
             Self::gl_pair_tabulated(n, k - 1)

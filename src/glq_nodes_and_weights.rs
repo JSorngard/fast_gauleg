@@ -169,8 +169,11 @@ impl GlqThetaWeightPair {
     /// Panics if `k = 0` or `n < k`.
     #[must_use]
     fn new(n: usize, k: usize) -> Self {
-        assert_ne!(k, 0);
-        assert!(n >= k);
+        assert_ne!(
+            k, 0,
+            "gauss-legendre node-weight pairs are 1-indexed, but `k` was `0`"
+        );
+        assert!(n >= k, "`k` must not exceed `n`");
         if n <= 100 {
             Self::gl_pair_tabulated(n, k - 1)
         } else if 2 * k - 1 > n {

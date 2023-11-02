@@ -8,7 +8,7 @@ $$\int_a^b\\!f(x)\\;\mathrm{d}x\approx\frac{b-a}{2}\sum_{k=1}^nw_n(k)f\left(\fra
 
 where `n` is a chosen integer, `a` and `b` are finite numbers, and `w_n` and `x_n` are specific numbers derived from Legendre polynomials.
 
-*The serial parts of this code have been merged into the [gauss_quad](https://crates.io/crates/gauss-quad) crate.*
+*The serial parts of this code have been merged into the [gauss_quad](https://crates.io/crates/gauss-quad) crate in [this PR](https://github.com/DomiDre/gauss-quad/pull/15).*
 
 # Examples
 

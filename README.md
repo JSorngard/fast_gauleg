@@ -3,7 +3,9 @@
 A crate for numerical integration with [Gauss-Legendre quadrature](https://en.wikipedia.org/wiki/Gauss%E2%80%93Legendre_quadrature). This crate uses the method described in the paper ["Iteration-Free Computation of Gauss-Legendre Quadrature Nodes and Weights"](https://doi.org/10.1137/140954969) by I. Bogaert which enables computation of node-weight pairs in O(1) time complexity (and optionally in parallel) while maintaining an accuracy of a few ulps in the nodes and weights (see paper for details).
 
 The integrals are computed with the formula  
-![integral_approximation](readme_images/integral_approx.svg)  
+
+$$\int_a^b\\!f(x)\\;\mathrm{d}x\approx\frac{b-a}{2}\sum_{k=1}^nw_n(k)f\left(\frac{b-a}{2}x_n(k)+\frac{a+b}{2}\right)$$
+
 where `n` is a chosen integer, `a` and `b` are finite numbers, and `w_n` and `x_n` are specific numbers derived from Legendre polynomials.
 
 *The serial parts of this code have been merged into the [gauss_quad](https://crates.io/crates/gauss-quad) crate.*
